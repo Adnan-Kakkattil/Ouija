@@ -15,7 +15,7 @@ const rooms = [
     title: "The First Chamber",
     lede: "Dust, moonlight, and eight objects that remember Olivia.",
     pointsPerChallenge: 100,
-    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4", "room1-5"],
+    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4", "room1-5", "room1-6"],
   },
   {
     id: "room-2",
@@ -131,6 +131,22 @@ const challenges = [
     correctFlag: "flag{the_ghost_is_trapped}",
     artifactUrl: "assets/files/ghost-journal.zip",
     artifactLabel: "Download the sealed journal",
+  },
+  {
+    id: "room1-6",
+    roomId: "room-1",
+    category: "forensics",
+    trial: "Room I · The First Chamber",
+    roman: "I",
+    title: "Haunted Music Box",
+    points: 100,
+    difficulty: "medium",
+    description:
+      "An old music box still turns on the dresser. Download the recording — the melody is not all it carries. Recover the whisper buried in the audio.",
+    hint: "The tune is a distraction. Read the least significant bit of each sample.",
+    correctFlag: "flag{listen_to_the_whispers}",
+    artifactUrl: "assets/files/haunted-musicbox.wav",
+    artifactLabel: "Download the music box recording",
   },
   {
     id: "whisper-2",

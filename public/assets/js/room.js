@@ -153,13 +153,15 @@
     box.hidden = false;
     link.href = c.artifactUrl;
     link.textContent = c.artifactLabel || "Download evidence";
-    if (/\.(zip|png|jpe?g|gif|webp)$/i.test(c.artifactUrl)) {
+    if (/\.(zip|wav|png|jpe?g|gif|webp)$/i.test(c.artifactUrl)) {
       link.setAttribute("download", c.artifactUrl.split("/").pop());
     } else {
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room1-5") {
+      if (c.id === "room1-6") {
+        note.textContent = "Download the WAV. The whisper is hidden inside the audio itself.";
+      } else if (c.id === "room1-5") {
         note.textContent = "Crack the MD5 clasp, then unlock this ZIP with the recovered word.";
       } else {
         note.textContent = "Save a copy of the evidence for your circle.";
