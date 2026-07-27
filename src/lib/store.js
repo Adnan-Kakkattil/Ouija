@@ -1,13 +1,7 @@
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
 const { randomUUID } = require("crypto");
-
-const DATA_DIR = path.join(__dirname, "..", "..", "data");
-const USERS_FILE = path.join(DATA_DIR, "users.json");
-const TEAMS_FILE = path.join(DATA_DIR, "teams.json");
-const SOLVES_FILE = path.join(DATA_DIR, "solves.json");
+const { getDb } = require("./db");
 
 const SEED_CIRCLES = [
   { name: "The Hollow Choir", sigil: "☾" },
@@ -22,83 +16,75 @@ const SEED_CIRCLES = [
 
 const SIGILS = ["☾", "✦", "◈", "†", "☗", "⚵", "✧", "⁂", "☥", "⚕", "❈", "⌘"];
 
-function ensureDir() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+function users() {
+  return getDb().collection("users");
 }
-
-function readJson(file, fallback) {
-  ensureDir();
-  try {
-    if (!fs.existsSync(file)) {
-      writeJson(file, fallback);
-      return structuredClone(fallback);
-    }
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return structuredClone(fallback);
-  }
+function teams() {
+  return getDb().collection("teams");
 }
-
-function writeJson(file, value) {
-  ensureDir();
-  const tmp = file + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(value, null, 2), "utf8");
-  fs.renameSync(tmp, file);
+function solves() {
+  return getDb().collection("solves");
 }
-
-function seedTeams() {
-  const teams = readJson(TEAMS_FILE, []);
-  if (teams.length) return teams;
-  const seeded = SEED_CIRCLES.map((c) => ({
-    id: "circle_" + randomUUID().replace(/-/g, "").slice(0, 12),
-    name: c.name,
-    nameKey: c.name.trim().toLowerCase(),
-    sigil: c.sigil,
-    createdAt: Date.now(),
-    founderId: null,
-    seeded: true,
-  }));
-  writeJson(TEAMS_FILE, seeded);
-  return seeded;
+function logins() {
+  return getDb().collection("logins");
 }
 
 const store = {
-  listUsers() {
-    return readJson(USERS_FILE, []);
+  async seedTeams() {
+    const count = await teams().countDocuments();
+    if (count > 0) return;
+    const seeded = SEED_CIRCLES.map((c) => ({
+      id: "circle_" + randomUUID().replace(/-/g, "").slice(0, 12),
+      name: c.name,
+      nameKey: c.name.trim().toLowerCase(),
+      sigil: c.sigil,
+      createdAt: Date.now(),
+      founderId: null,
+      seeded: true,
+    }));
+    await teams().insertMany(seeded);
   },
 
-  saveUsers(users) {
-    writeJson(USERS_FILE, users);
+  async listUsers() {
+    return users().find({}, { projection: { _id: 0 } }).toArray();
   },
 
-  findUserById(id) {
-    return this.listUsers().find((u) => u.id === id) || null;
+  async findUserById(id) {
+    return users().findOne({ id }, { projection: { _id: 0 } });
   },
 
-  findUserByLogin(identifier) {
+  async findUserByLogin(identifier) {
     const key = String(identifier || "").trim().toLowerCase();
-    return (
-      this.listUsers().find((u) => u.usernameKey === key || u.emailKey === key) || null
+    return users().findOne(
+      { $or: [{ usernameKey: key }, { emailKey: key }] },
+      { projection: { _id: 0 } }
     );
   },
 
-  listTeams() {
-    return seedTeams();
+  async createUser(user) {
+    await users().insertOne({ ...user });
+    return user;
   },
 
-  saveTeams(teams) {
-    writeJson(TEAMS_FILE, teams);
+  async updateUser(id, patch) {
+    await users().updateOne({ id }, { $set: patch });
+    return this.findUserById(id);
   },
 
-  findTeam(id) {
-    return this.listTeams().find((t) => t.id === id) || null;
+  async listTeams() {
+    await this.seedTeams();
+    return teams().find({}, { projection: { _id: 0 } }).sort({ name: 1 }).toArray();
   },
 
-  createTeam(rawName, founderId) {
+  async findTeam(id) {
+    return teams().findOne({ id }, { projection: { _id: 0 } });
+  },
+
+  async createTeam(rawName, founderId) {
     const name = String(rawName || "").trim().replace(/\s+/g, " ");
     const nameKey = name.toLowerCase();
-    const teams = this.listTeams();
-    if (teams.some((t) => t.nameKey === nameKey)) {
+    const existing = await teams().findOne({ nameKey });
+    if (existing) {
       const err = new Error("That circle already gathers. Choose it from the list instead.");
       err.field = "teamName";
       err.status = 409;
@@ -113,15 +99,77 @@ const store = {
       founderId: founderId || null,
       seeded: false,
     };
-    teams.push(team);
-    this.saveTeams(teams);
+    try {
+      await teams().insertOne(team);
+    } catch (err) {
+      if (err && err.code === 11000) {
+        const e = new Error("That circle already gathers. Choose it from the list instead.");
+        e.field = "teamName";
+        e.status = 409;
+        throw e;
+      }
+      throw err;
+    }
     return team;
   },
 
-  publicUser(user) {
+  async setTeamFounder(teamId, founderId) {
+    await teams().updateOne(
+      { id: teamId, $or: [{ founderId: null }, { founderId: { $exists: false } }] },
+      { $set: { founderId } }
+    );
+  },
+
+  async listSolvesForUser(userId) {
+    return solves().find({ userId }, { projection: { _id: 0 } }).toArray();
+  },
+
+  async hasSolve(userId, challengeId) {
+    const row = await solves().findOne({ userId, challengeId }, { projection: { _id: 1 } });
+    return !!row;
+  },
+
+  async addSolve({ userId, challengeId, points }) {
+    const row = {
+      id: "solve_" + randomUUID().replace(/-/g, "").slice(0, 12),
+      userId,
+      challengeId,
+      points,
+      at: Date.now(),
+    };
+    await solves().insertOne(row);
+    await users().updateOne(
+      { id: userId },
+      { $inc: { score: points, solvedCount: 1 } }
+    );
+    return row;
+  },
+
+  async recordLogin(userId, meta = {}) {
+    const at = Date.now();
+    await logins().insertOne({
+      id: "login_" + randomUUID().replace(/-/g, "").slice(0, 12),
+      userId,
+      at,
+      ip: meta.ip || null,
+      userAgent: meta.userAgent || null,
+      remember: !!meta.remember,
+    });
+    await users().updateOne(
+      { id: userId },
+      {
+        $set: { lastLoginAt: at, lastLoginIp: meta.ip || null },
+        $inc: { loginCount: 1 },
+      }
+    );
+  },
+
+  async publicUser(user) {
     if (!user) return null;
-    const team = this.findTeam(user.teamId);
-    const solves = this.listSolves().filter((s) => s.userId === user.id);
+    const [team, userSolves] = await Promise.all([
+      this.findTeam(user.teamId),
+      this.listSolvesForUser(user.id),
+    ]);
     return {
       id: user.id,
       username: user.username,
@@ -130,49 +178,74 @@ const store = {
       teamName: team ? team.name : "Unaffiliated",
       teamSigil: team ? team.sigil : "○",
       score: user.score || 0,
-      solved: solves.map((s) => s.challengeId),
+      solved: userSolves.map((s) => s.challengeId),
+      solvedCount: user.solvedCount || userSolves.length,
+      loginCount: user.loginCount || 0,
+      lastLoginAt: user.lastLoginAt || null,
       createdAt: user.createdAt,
       role: user.role || "medium",
     };
   },
 
-  listSolves() {
-    return readJson(SOLVES_FILE, []);
-  },
-
-  saveSolves(solves) {
-    writeJson(SOLVES_FILE, solves);
-  },
-
-  teamsWithCounts() {
-    const users = this.listUsers();
-    return this.listTeams()
+  async teamsWithCounts() {
+    const [teamList, memberCounts] = await Promise.all([
+      this.listTeams(),
+      users()
+        .aggregate([{ $group: { _id: "$teamId", count: { $sum: 1 } } }])
+        .toArray(),
+    ]);
+    const byTeam = new Map(memberCounts.map((r) => [r._id, r.count]));
+    return teamList
       .map((t) => ({
         id: t.id,
         name: t.name,
         sigil: t.sigil,
         seeded: !!t.seeded,
-        memberCount: users.filter((u) => u.teamId === t.id).length,
+        memberCount: byTeam.get(t.id) || 0,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  leaderboard() {
-    const users = this.listUsers();
-    return this.listTeams()
+  async leaderboard() {
+    const [teamList, memberStats] = await Promise.all([
+      this.listTeams(),
+      users()
+        .aggregate([
+          {
+            $group: {
+              _id: "$teamId",
+              members: { $sum: 1 },
+              score: { $sum: { $ifNull: ["$score", 0] } },
+              solved: { $sum: { $ifNull: ["$solvedCount", 0] } },
+            },
+          },
+        ])
+        .toArray(),
+    ]);
+    const byTeam = new Map(memberStats.map((r) => [r._id, r]));
+    return teamList
       .map((t) => {
-        const members = users.filter((u) => u.teamId === t.id);
+        const stats = byTeam.get(t.id) || { members: 0, score: 0, solved: 0 };
         return {
           id: t.id,
           name: t.name,
           sigil: t.sigil,
-          members: members.length,
-          score: members.reduce((sum, u) => sum + (u.score || 0), 0),
-          solved: members.reduce((sum, u) => sum + (u.solvedCount || 0), 0),
+          members: stats.members,
+          score: stats.score,
+          solved: stats.solved,
         };
       })
       .filter((t) => t.members > 0)
       .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  },
+
+  async stats() {
+    const [circles, mediums, solveCount] = await Promise.all([
+      teams().countDocuments(),
+      users().countDocuments(),
+      solves().countDocuments(),
+    ]);
+    return { circles, mediums, solveCount };
   },
 };
 

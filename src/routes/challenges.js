@@ -7,13 +7,17 @@ const { requireAuth } = require("./auth");
 
 const router = express.Router();
 
-router.get("/", requireAuth, (req, res) => {
-  const user = store.publicUser(req.user);
-  const solved = user.solved || [];
-  res.json({
-    ok: true,
-    challenges: challenges.map((c) => publicChallenge(c, solved)),
-  });
+router.get("/", requireAuth, async (req, res, next) => {
+  try {
+    const user = await store.publicUser(req.user);
+    const solved = user.solved || [];
+    res.json({
+      ok: true,
+      challenges: challenges.map((c) => publicChallenge(c, solved)),
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /* Specific challenge helpers before /:id */
@@ -40,52 +44,63 @@ router.post("/ecto-1/channel", requireAuth, (req, res) => {
   res.json({ ok: true, overflow: false, echo: message });
 });
 
-router.get("/:id", requireAuth, (req, res) => {
-  const c = findChallenge(req.params.id);
-  if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
-  const user = store.publicUser(req.user);
-  res.json({ ok: true, challenge: publicChallenge(c, user.solved || []) });
+router.get("/:id", requireAuth, async (req, res, next) => {
+  try {
+    const c = findChallenge(req.params.id);
+    if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+    const user = await store.publicUser(req.user);
+    res.json({ ok: true, challenge: publicChallenge(c, user.solved || []) });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.post("/:id/submit", requireAuth, (req, res) => {
-  const c = findChallenge(req.params.id);
-  if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+router.post("/:id/submit", requireAuth, async (req, res, next) => {
+  try {
+    const c = findChallenge(req.params.id);
+    if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
 
-  const flag = String(req.body.flag || "").trim();
-  if (!flag) return res.status(400).json({ ok: false, message: "Offer a flag." });
+    const flag = String(req.body.flag || "").trim();
+    if (!flag) return res.status(400).json({ ok: false, message: "Offer a flag." });
 
-  const users = store.listUsers();
-  const user = users.find((u) => u.id === req.user.id);
-  if (!user) return res.status(401).json({ ok: false, message: "Chair gone cold." });
+    const user = await store.findUserById(req.user.id);
+    if (!user) return res.status(401).json({ ok: false, message: "Chair gone cold." });
 
-  const solves = store.listSolves();
-  if (solves.some((s) => s.userId === user.id && s.challengeId === c.id)) {
-    return res.json({ ok: true, alreadySolved: true, message: "This flag is already claimed by your circle." });
+    if (await store.hasSolve(user.id, c.id)) {
+      return res.json({
+        ok: true,
+        alreadySolved: true,
+        message: "This flag is already claimed by your circle.",
+      });
+    }
+
+    if (flag !== c.correctFlag) {
+      return res.status(400).json({ ok: false, message: "The spirits reject that offering." });
+    }
+
+    try {
+      await store.addSolve({ userId: user.id, challengeId: c.id, points: c.points });
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.json({
+          ok: true,
+          alreadySolved: true,
+          message: "This flag is already claimed by your circle.",
+        });
+      }
+      throw err;
+    }
+
+    const fresh = await store.findUserById(user.id);
+    res.json({
+      ok: true,
+      message: "The board accepts your offering.",
+      points: c.points,
+      user: await store.publicUser(fresh),
+    });
+  } catch (err) {
+    next(err);
   }
-
-  if (flag !== c.correctFlag) {
-    return res.status(400).json({ ok: false, message: "The spirits reject that offering." });
-  }
-
-  solves.push({
-    id: "solve_" + Date.now(),
-    userId: user.id,
-    challengeId: c.id,
-    points: c.points,
-    at: Date.now(),
-  });
-  store.saveSolves(solves);
-
-  user.score = (user.score || 0) + c.points;
-  user.solvedCount = (user.solvedCount || 0) + 1;
-  store.saveUsers(users);
-
-  res.json({
-    ok: true,
-    message: "The board accepts your offering.",
-    points: c.points,
-    user: store.publicUser(user),
-  });
 });
 
 module.exports = router;

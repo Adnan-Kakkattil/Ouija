@@ -17,37 +17,64 @@ function fail(res, status, field, message) {
   return res.status(status).json({ ok: false, field, message });
 }
 
-function requireAuth(req, res, next) {
-  if (!req.session || !req.session.userId) {
-    return res.status(401).json({ ok: false, message: "The board does not recognise you. Enter first." });
-  }
-  const user = store.findUserById(req.session.userId);
-  if (!user) {
-    req.session.destroy(() => {});
-    return res.status(401).json({ ok: false, message: "Your chair has gone cold. Enter again." });
-  }
-  req.user = user;
-  next();
+function clientMeta(req, remember) {
+  return {
+    ip: req.headers["x-forwarded-for"]
+      ? String(req.headers["x-forwarded-for"]).split(",")[0].trim()
+      : req.socket.remoteAddress || null,
+    userAgent: req.get("user-agent") || null,
+    remember: !!remember,
+  };
 }
 
-router.get("/teams", (_req, res) => {
-  res.json({ ok: true, teams: store.teamsWithCounts() });
+async function requireAuth(req, res, next) {
+  try {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ ok: false, message: "The board does not recognise you. Enter first." });
+    }
+    const user = await store.findUserById(req.session.userId);
+    if (!user) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ ok: false, message: "Your chair has gone cold. Enter again." });
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+router.get("/teams", async (_req, res, next) => {
+  try {
+    res.json({ ok: true, teams: await store.teamsWithCounts() });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/me", (req, res) => {
-  if (!req.session || !req.session.userId) {
-    return res.json({ ok: true, user: null });
+router.get("/me", async (req, res, next) => {
+  try {
+    if (!req.session || !req.session.userId) {
+      return res.json({ ok: true, user: null });
+    }
+    const user = await store.findUserById(req.session.userId);
+    if (!user) {
+      req.session.destroy(() => {});
+      return res.json({ ok: true, user: null });
+    }
+    res.json({ ok: true, user: await store.publicUser(user) });
+  } catch (err) {
+    next(err);
   }
-  const user = store.findUserById(req.session.userId);
-  if (!user) {
-    req.session.destroy(() => {});
-    return res.json({ ok: true, user: null });
-  }
-  res.json({ ok: true, user: store.publicUser(user) });
 });
 
-router.get("/leaderboard", (_req, res) => {
-  res.json({ ok: true, rows: store.leaderboard(), circles: store.listTeams().length });
+router.get("/leaderboard", async (_req, res, next) => {
+  try {
+    const [rows, teams] = await Promise.all([store.leaderboard(), store.listTeams()]);
+    res.json({ ok: true, rows, circles: teams.length });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/signup", async (req, res) => {
@@ -74,13 +101,13 @@ router.post("/signup", async (req, res) => {
     }
     if (password.length > 200) return fail(res, 400, "password", "That incantation is too long.");
 
-    const users = store.listUsers();
     const nameKey = username.toLowerCase();
     const mailKey = email.toLowerCase();
-    if (users.some((u) => u.usernameKey === nameKey)) {
+
+    if (await store.findUserByLogin(username)) {
       return fail(res, 409, "username", "Another medium already answers to that name.");
     }
-    if (users.some((u) => u.emailKey === mailKey)) {
+    if (await store.findUserByLogin(email)) {
       return fail(res, 409, "email", "That address is already bound to a medium.");
     }
 
@@ -93,11 +120,11 @@ router.post("/signup", async (req, res) => {
           "3–32 characters. Letters, numbers, spaces and ' & . : _ - only."
         );
       }
-      const team = store.createTeam(newTeamName);
+      const team = await store.createTeam(newTeamName);
       teamId = team.id;
     } else if (!teamId) {
       return fail(res, 400, "team", "Choose the circle you sit with.");
-    } else if (!store.findTeam(teamId)) {
+    } else if (!(await store.findTeam(teamId))) {
       return fail(res, 400, "team", "That circle has dissolved. Pick another.");
     }
 
@@ -112,29 +139,41 @@ router.post("/signup", async (req, res) => {
       role: "medium",
       score: 0,
       solvedCount: 0,
+      loginCount: 0,
+      lastLoginAt: null,
       createdAt: Date.now(),
       passwordHash: hash,
     };
 
-    users.push(user);
-    store.saveUsers(users);
-
-    const teams = store.listTeams();
-    const team = teams.find((t) => t.id === teamId);
-    if (team && !team.founderId) {
-      team.founderId = user.id;
-      store.saveTeams(teams);
+    try {
+      await store.createUser(user);
+    } catch (err) {
+      if (err && err.code === 11000) {
+        const field = String(err.message || "").includes("emailKey") ? "email" : "username";
+        return fail(
+          res,
+          409,
+          field,
+          field === "email"
+            ? "That address is already bound to a medium."
+            : "Another medium already answers to that name."
+        );
+      }
+      throw err;
     }
+
+    await store.setTeamFounder(teamId, user.id);
+    await store.recordLogin(user.id, clientMeta(req, false));
 
     req.session.userId = user.id;
     req.session.cookie.maxAge = 12 * 60 * 60 * 1000;
 
-    req.session.save((err) => {
+    req.session.save(async (err) => {
       if (err) {
         console.error("[signup] session save", err);
         return res.status(500).json({ ok: false, message: "The board refused. Try once more." });
       }
-      res.status(201).json({ ok: true, user: store.publicUser(user) });
+      res.status(201).json({ ok: true, user: await store.publicUser(user) });
     });
   } catch (err) {
     if (err.field) return fail(res, err.status || 400, err.field, err.message);
@@ -152,7 +191,7 @@ router.post("/login", async (req, res) => {
     if (!identifier) return fail(res, 400, "identifier", "Name yourself, or give your address.");
     if (!password) return fail(res, 400, "password", "The passphrase is missing.");
 
-    const user = store.findUserByLogin(identifier);
+    const user = await store.findUserByLogin(identifier);
     const rejection = "The spirits do not recognise that pairing.";
 
     if (!user) {
@@ -163,15 +202,18 @@ router.post("/login", async (req, res) => {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return fail(res, 401, "password", rejection);
 
+    await store.recordLogin(user.id, clientMeta(req, remember));
+
     req.session.userId = user.id;
     req.session.cookie.maxAge = remember ? 30 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
 
-    req.session.save((err) => {
+    req.session.save(async (err) => {
       if (err) {
         console.error("[login] session save", err);
         return res.status(500).json({ ok: false, message: "The board stayed shut." });
       }
-      res.json({ ok: true, user: store.publicUser(user) });
+      const fresh = await store.findUserById(user.id);
+      res.json({ ok: true, user: await store.publicUser(fresh || user) });
     });
   } catch (err) {
     console.error("[login]", err);
@@ -186,16 +228,20 @@ router.post("/logout", (req, res) => {
   });
 });
 
-router.get("/stats", (_req, res) => {
-  const teams = store.teamsWithCounts();
-  const mediums = store.listUsers().length;
-  res.json({
-    ok: true,
-    circles: teams.length,
-    mediums,
-    challenges: 8,
-    categories: 6,
-  });
+router.get("/stats", async (_req, res, next) => {
+  try {
+    const stats = await store.stats();
+    res.json({
+      ok: true,
+      circles: stats.circles,
+      mediums: stats.mediums,
+      solves: stats.solveCount,
+      challenges: 8,
+      categories: 6,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = { router, requireAuth };
