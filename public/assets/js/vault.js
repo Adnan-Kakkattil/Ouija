@@ -98,6 +98,11 @@
       return api("/api/auth/leaderboard");
     },
 
+    async pointLedger(limit) {
+      const q = limit ? "?limit=" + encodeURIComponent(limit) : "";
+      return api("/api/auth/points" + q);
+    },
+
     async stats() {
       return api("/api/auth/stats");
     },

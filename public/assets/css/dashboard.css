@@ -169,6 +169,19 @@
   opacity: 0.78;
 }
 
+.ladder__score.is-gain {
+  color: var(--brass-300);
+}
+
+.ladder__score.is-loss {
+  color: color-mix(in srgb, #c45c5c 80%, var(--parchment-400));
+}
+
+#ledgerTotals {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-xs);
+}
+
 .whoami__chip {
   display: inline-flex;
   align-items: center;

@@ -31,6 +31,9 @@ function logins() {
 function hints() {
   return getDb().collection("hints");
 }
+function points() {
+  return getDb().collection("points");
+}
 
 const store = {
   async seedTeams() {
@@ -132,21 +135,147 @@ const store = {
     return !!row;
   },
 
-  async addSolve({ userId, challengeId, points }) {
+  async addSolve({ userId, challengeId, points: award }) {
+    const user = await this.findUserById(userId);
+    if (!user) {
+      const err = new Error("Chair gone cold.");
+      err.status = 401;
+      throw err;
+    }
+
     const row = {
       id: "solve_" + randomUUID().replace(/-/g, "").slice(0, 12),
       userId,
       challengeId,
-      points,
+      points: award,
       at: Date.now(),
     };
     await solves().insertOne(row);
+
+    const balanceBefore = user.score || 0;
+    const balanceAfter = balanceBefore + award;
     await users().updateOne(
       { id: userId },
-      { $inc: { score: points, solvedCount: 1 } }
+      {
+        $set: { score: balanceAfter },
+        $inc: { solvedCount: 1, pointsEarned: award },
+      }
     );
+    await this.recordPoint({
+      userId,
+      teamId: user.teamId || null,
+      kind: "solve",
+      challengeId,
+      delta: award,
+      balanceBefore,
+      balanceAfter,
+      note: "Flag claimed",
+    });
     await this.advanceProgress(userId, challengeId);
     return row;
+  },
+
+  /**
+   * Immutable ledger of every score change (+solve / −hint).
+   * Unique per user+kind+challenge so solve/hint each log once.
+   */
+  async recordPoint({ userId, teamId, kind, challengeId, delta, balanceBefore, balanceAfter, note }) {
+    const entry = {
+      id: "pt_" + randomUUID().replace(/-/g, "").slice(0, 12),
+      userId,
+      teamId: teamId || null,
+      kind,
+      challengeId: challengeId || null,
+      delta,
+      balanceBefore: balanceBefore != null ? balanceBefore : null,
+      balanceAfter: balanceAfter != null ? balanceAfter : null,
+      note: note || null,
+      at: Date.now(),
+    };
+    try {
+      await points().insertOne(entry);
+    } catch (err) {
+      if (err && err.code === 11000) return null;
+      throw err;
+    }
+    return entry;
+  },
+
+  async listPointsForUser(userId, limit) {
+    const lim = Math.min(Math.max(Number(limit) || 50, 1), 200);
+    return points()
+      .find({ userId }, { projection: { _id: 0 } })
+      .sort({ at: -1 })
+      .limit(lim)
+      .toArray();
+  },
+
+  async pointTotals(userId) {
+    const rows = await points()
+      .aggregate([
+        { $match: { userId } },
+        {
+          $group: {
+            _id: null,
+            earned: {
+              $sum: { $cond: [{ $gt: ["$delta", 0] }, "$delta", 0] },
+            },
+            spent: {
+              $sum: { $cond: [{ $lt: ["$delta", 0] }, { $abs: "$delta" }, 0] },
+            },
+            entries: { $sum: 1 },
+          },
+        },
+      ])
+      .toArray();
+    const row = rows[0] || { earned: 0, spent: 0, entries: 0 };
+    return { earned: row.earned || 0, spent: row.spent || 0, entries: row.entries || 0 };
+  },
+
+  /* One-time: copy existing solves/hints into the points ledger if missing */
+  async backfillPointsLedger() {
+    const existing = await points().countDocuments();
+    if (existing > 0) return { skipped: true };
+
+    const [allSolves, allHints, allUsers] = await Promise.all([
+      solves().find({}, { projection: { _id: 0 } }).toArray(),
+      hints().find({}, { projection: { _id: 0 } }).toArray(),
+      users().find({}, { projection: { _id: 0, id: 1, teamId: 1 } }).toArray(),
+    ]);
+    const teamByUser = new Map(allUsers.map((u) => [u.id, u.teamId || null]));
+    const docs = [];
+
+    for (const s of allSolves) {
+      docs.push({
+        id: "pt_" + randomUUID().replace(/-/g, "").slice(0, 12),
+        userId: s.userId,
+        teamId: teamByUser.get(s.userId) || null,
+        kind: "solve",
+        challengeId: s.challengeId,
+        delta: s.points || 0,
+        balanceBefore: null,
+        balanceAfter: null,
+        note: "Flag claimed (backfill)",
+        at: s.at || Date.now(),
+      });
+    }
+    for (const h of allHints) {
+      const spent = h.deducted != null ? h.deducted : h.cost || 0;
+      docs.push({
+        id: "pt_" + randomUUID().replace(/-/g, "").slice(0, 12),
+        userId: h.userId,
+        teamId: teamByUser.get(h.userId) || null,
+        kind: "hint",
+        challengeId: h.challengeId,
+        delta: -Math.abs(spent),
+        balanceBefore: null,
+        balanceAfter: null,
+        note: "Hint unlocked (backfill)",
+        at: h.at || Date.now(),
+      });
+    }
+    if (docs.length) await points().insertMany(docs, { ordered: false }).catch(() => {});
+    return { skipped: false, inserted: docs.length };
   },
 
   /* Remember which trial the medium last opened (survives logout/relogin) */
@@ -223,9 +352,9 @@ const store = {
       throw err;
     }
 
-    const current = user.score || 0;
-    const deducted = Math.min(cost, Math.max(0, current));
-    const nextScore = Math.max(0, current - cost);
+    const balanceBefore = user.score || 0;
+    const deducted = Math.min(cost, Math.max(0, balanceBefore));
+    const balanceAfter = Math.max(0, balanceBefore - cost);
 
     try {
       await hints().insertOne({
@@ -246,12 +375,25 @@ const store = {
     await users().updateOne(
       { id: userId },
       {
-        $set: { score: nextScore },
-        $inc: { hintsUsed: 1, hintPointsSpent: deducted },
+        $set: { score: balanceAfter },
+        $inc: { hintsUsed: 1, hintPointsSpent: deducted, pointsSpent: deducted },
       }
     );
 
-    return { alreadyUnlocked: false, cost, deducted, score: nextScore };
+    if (deducted > 0 || cost > 0) {
+      await this.recordPoint({
+        userId,
+        teamId: user.teamId || null,
+        kind: "hint",
+        challengeId,
+        delta: -deducted,
+        balanceBefore,
+        balanceAfter,
+        note: "Hint unlocked (−" + cost + " listed)",
+      });
+    }
+
+    return { alreadyUnlocked: false, cost, deducted, score: balanceAfter };
   },
 
   async teamProgress(teamId) {
@@ -293,11 +435,13 @@ const store = {
 
   async publicUser(user) {
     if (!user) return null;
-    const [team, userSolves, hintIds, teamProg] = await Promise.all([
+    const [team, userSolves, hintIds, teamProg, totals, recentPoints] = await Promise.all([
       this.findTeam(user.teamId),
       this.listSolvesForUser(user.id),
       this.listHintIdsForUser(user.id),
       this.teamProgress(user.teamId),
+      this.pointTotals(user.id),
+      this.listPointsForUser(user.id, 12),
     ]);
     return {
       id: user.id,
@@ -310,8 +454,11 @@ const store = {
       solved: userSolves.map((s) => s.challengeId),
       solvedCount: user.solvedCount || userSolves.length,
       hintsUsed: user.hintsUsed || hintIds.length,
-      hintPointsSpent: user.hintPointsSpent || 0,
+      hintPointsSpent: user.hintPointsSpent || totals.spent || 0,
       unlockedHints: hintIds,
+      pointsEarned: user.pointsEarned != null ? user.pointsEarned : totals.earned,
+      pointsSpent: user.pointsSpent != null ? user.pointsSpent : totals.spent,
+      pointLedger: recentPoints,
       loginCount: user.loginCount || 0,
       lastLoginAt: user.lastLoginAt || null,
       lastChallengeId: user.lastChallengeId || null,

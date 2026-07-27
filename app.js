@@ -149,6 +149,9 @@ async function createSessionStore() {
   try {
     await connect();
     await store.seedTeams();
+    await store.backfillPointsLedger().catch((err) => {
+      console.warn("[ouija] points ledger backfill skipped:", err.message || err);
+    });
     const { MongoStore } = require("connect-mongo");
     console.log(`[ouija] MongoDB connected (${process.env.MONGODB_DB || "ouija"})`);
     return MongoStore.create({

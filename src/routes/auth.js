@@ -94,6 +94,25 @@ router.get("/me", async (req, res, next) => {
   }
 });
 
+/* Full point ledger: every +solve and −hint for the seated medium */
+router.get("/points", requireAuth, async (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit) || 100;
+    const [entries, totals] = await Promise.all([
+      store.listPointsForUser(req.user.id, limit),
+      store.pointTotals(req.user.id),
+    ]);
+    res.json({
+      ok: true,
+      entries,
+      totals,
+      score: req.user.score || 0,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/leaderboard", async (_req, res, next) => {
   try {
     const [rows, teams] = await Promise.all([store.leaderboard(), store.listTeams()]);
@@ -165,6 +184,10 @@ router.post("/signup", async (req, res) => {
       role: "medium",
       score: 0,
       solvedCount: 0,
+      pointsEarned: 0,
+      pointsSpent: 0,
+      hintsUsed: 0,
+      hintPointsSpent: 0,
       loginCount: 0,
       lastLoginAt: null,
       lastChallengeId: null,

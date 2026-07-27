@@ -31,7 +31,7 @@
       if (!window.FirstRite) return;
       FirstRite.play({ force: true });
     });
-    await Promise.all([loadNext(user), loadLadder()]);
+    await Promise.all([loadNext(user), loadLadder(), loadLedger(user)]);
   }
 
   function paintUser(user) {
@@ -120,6 +120,67 @@
     } catch (err) {
       document.getElementById("nextTitle").textContent = "The trials are sealed";
       document.getElementById("nextDesc").textContent = err.message || "Could not load challenges.";
+    }
+  }
+
+  function paintLedger(entries, totals) {
+    const list = document.getElementById("dashLedger");
+    const totalsEl = document.getElementById("ledgerTotals");
+    if (!list) return;
+
+    if (totalsEl) {
+      totalsEl.textContent =
+        "Gained +" +
+        (totals.earned || 0) +
+        " · Spent −" +
+        (totals.spent || 0);
+    }
+
+    const rows = entries || [];
+    if (!rows.length) {
+      list.innerHTML =
+        '<li class="ladder__empty"><p class="typewriter-note">No movements yet.</p></li>';
+      return;
+    }
+
+    list.innerHTML = rows
+      .slice(0, 8)
+      .map((e) => {
+        const plus = e.delta >= 0;
+        const label =
+          e.kind === "hint"
+            ? "Hint"
+            : e.kind === "solve"
+              ? "Solve"
+              : e.kind || "Move";
+        const challenge = e.challengeId ? " · " + e.challengeId : "";
+        return `
+        <li>
+          <span class="ladder__rank">${plus ? "+" : "−"}</span>
+          <span>
+            <span class="ladder__name">${escapeHtml(label)}${escapeHtml(challenge)}</span>
+            <span class="ladder__meta">${escapeHtml(e.note || "")}</span>
+          </span>
+          <span class="ladder__score ${plus ? "is-gain" : "is-loss"}">${
+            plus ? "+" : ""
+          }${e.delta}</span>
+        </li>`;
+      })
+      .join("");
+  }
+
+  async function loadLedger(user) {
+    try {
+      if (user && user.pointLedger) {
+        paintLedger(user.pointLedger, {
+          earned: user.pointsEarned || 0,
+          spent: user.pointsSpent || user.hintPointsSpent || 0,
+        });
+      }
+      const data = await Vault.pointLedger(50);
+      paintLedger(data.entries || [], data.totals || {});
+    } catch {
+      /* ignore */
     }
   }
 
