@@ -15,6 +15,13 @@
     const user = await Vault.requireAuth("login.html");
     if (!user) return;
 
+    /* Resume unfinished Trial I gate if the first key is still unclaimed */
+    const gated = await Vault.playIntro(user, () => {
+      /* stay on the table after offering the key */
+      location.reload();
+    });
+    if (gated) return;
+
     paintUser(user);
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {

@@ -63,17 +63,11 @@
       const explicitNext = next !== defaultNext;
       const dest = explicitNext ? next : Vault.resumeUrl(user, defaultNext);
 
-      /* First login / unseen story — fullscreen prologue, pause/play only */
-      if (Vault.needsStory(user) && window.FirstRite) {
-        FirstRite.reset();
-        await FirstRite.play({
-          force: true,
-          onDone() {
-            Vault.go(dest, { instant: true });
-          },
-        });
-        return;
-      }
+      /* First sitting: story → Trial I video → burned-paper key */
+      const played = await Vault.playIntro(user, () => {
+        Vault.go(dest, { instant: true });
+      });
+      if (played) return;
 
       Vault.go(dest, { instant: true });
     } catch (err) {

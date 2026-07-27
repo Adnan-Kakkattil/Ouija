@@ -105,7 +105,14 @@
     const btn = document.getElementById("unlockHintBtn");
     const text = document.getElementById("modalHint");
     const note = document.getElementById("hintCostNote");
+    const box = document.getElementById("hintBox");
     const cost = c.hintCost != null ? c.hintCost : 10;
+
+    if (c.noHint) {
+      if (box) box.hidden = true;
+      return;
+    }
+    if (box) box.hidden = false;
 
     if (c.hintUnlocked && c.hint) {
       btn.hidden = true;

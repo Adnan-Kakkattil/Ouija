@@ -145,9 +145,28 @@
     needsStory(user) {
       if (!user) return false;
       if (user.storySeen) return false;
-      /* Anyone who already has trial progress has already been through the house */
       if (this.hasProgress(user)) return false;
       return true;
+    },
+
+    needsFirstGate(user) {
+      if (!user) return false;
+      if (user.solved && user.solved.indexOf("whisper-1") !== -1) return false;
+      return true;
+    },
+
+    async playIntro(user, onDone) {
+      const go = typeof onDone === "function" ? onDone : function () {};
+      if (this.needsStory(user) && window.FirstRite) {
+        FirstRite.reset();
+        await FirstRite.play({ force: true, chainGate: true, onDone: go });
+        return true;
+      }
+      if (this.needsFirstGate(user) && window.FirstGate) {
+        await FirstGate.play({ onDone: go });
+        return true;
+      }
+      return false;
     },
 
     async unlockHint(id) {

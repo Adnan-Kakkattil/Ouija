@@ -76,16 +76,10 @@
     const stage = document.getElementById("welcomeBoard");
 
     const finish = async () => {
-      if (window.FirstRite) {
-        FirstRite.reset();
-        await FirstRite.play({
-          force: true,
-          onDone() {
-            Vault.go("dashboard.html", { instant: true });
-          },
-        });
-        return;
-      }
+      const played = await Vault.playIntro(user, () => {
+        Vault.go("dashboard.html", { instant: true });
+      });
+      if (played) return;
       Vault.go("dashboard.html", { instant: true });
     };
 

@@ -10,13 +10,14 @@ const challenges = [
     category: "web",
     trial: "The Whispering Wall",
     roman: "I",
-    title: "Servant's Entrance",
+    title: "Burned Paper",
     points: 100,
     difficulty: "easy",
     description:
-      "When you entered, the house played its first transmission. That was only the knock. The servant's door is still unlocked — look at the page source of the landing séance. Something stencilled in the comments still listens.",
-    hint: "View the HTML of the home page. The dead leave notes in <!-- comments -->. Replay the transmission from The Table if you need to hear it again.",
-    correctFlag: "ouija{first_knock_answered}",
+      "After the story, the house showed you a burned leaf. The key is written in the ash — offer it to open the first door.",
+    hint: null,
+    noHint: true,
+    correctFlag: "intothevictorianmansion",
   },
   {
     id: "whisper-2",
@@ -114,6 +115,7 @@ const challenges = [
 function publicChallenge(c, solvedIds, unlockedHintIds) {
   const unlocked = Array.isArray(unlockedHintIds) && unlockedHintIds.includes(c.id);
   const cost = hintCost(c.difficulty);
+  const noHint = !!c.noHint;
   return {
     id: c.id,
     category: c.category,
@@ -123,10 +125,11 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
     points: c.points,
     difficulty: c.difficulty,
     description: c.description,
-    hintCost: cost,
-    hintUnlocked: unlocked,
-    /* Hint text only after the medium pays for it */
-    hint: unlocked ? c.hint : null,
+    noHint,
+    hintCost: noHint ? 0 : cost,
+    hintUnlocked: noHint ? false : unlocked,
+    /* Hint text only after the medium pays — never for no-hint trials */
+    hint: noHint ? null : unlocked ? c.hint : null,
     solved: (solvedIds || []).includes(c.id),
   };
 }

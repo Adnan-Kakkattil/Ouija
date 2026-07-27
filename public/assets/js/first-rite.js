@@ -86,9 +86,10 @@
   /**
    * Play the CTF story in fullscreen with sound.
    * While playing, only pause / unpause is available.
+   * When opts.chainGate is true, Trial I video starts right after the story.
    */
   function play(options) {
-    const opts = Object.assign({ force: false, onDone: null }, options || {});
+    const opts = Object.assign({ force: false, chainGate: false, onDone: null }, options || {});
     if (!opts.force && sessionStorage.getItem(SEEN_KEY) === "1") {
       if (typeof opts.onDone === "function") opts.onDone({ skipped: true, alreadySeen: true });
       return Promise.resolve(false);
@@ -113,9 +114,39 @@
         root.classList.toggle("is-paused", paused);
       }
 
+      function handoffToGate() {
+        sessionStorage.setItem(SEEN_KEY, "1");
+        markSeenServer();
+        exitDomFullscreen();
+        try {
+          video.pause();
+        } catch (_) {
+          /* ignore */
+        }
+        root.classList.add("is-leaving");
+        setTimeout(() => {
+          root.remove();
+          if (window.FirstGate && typeof FirstGate.play === "function") {
+            FirstGate.play({
+              onDone(result) {
+                if (typeof opts.onDone === "function") opts.onDone(result || { chained: true });
+                resolve(true);
+              },
+            });
+            return;
+          }
+          if (typeof opts.onDone === "function") opts.onDone({ chained: false });
+          resolve(true);
+        }, 320);
+      }
+
       function finish() {
         if (finished) return;
         finished = true;
+        if (opts.chainGate) {
+          handoffToGate();
+          return;
+        }
         sessionStorage.setItem(SEEN_KEY, "1");
         markSeenServer();
         exitDomFullscreen();
@@ -142,7 +173,6 @@
       }
 
       async function enterFullscreen() {
-        /* Prefer the story overlay, then the whole document (F11-like). */
         const ok = await requestDomFullscreen(root);
         if (!ok) await requestDomFullscreen(document.documentElement);
       }
@@ -194,7 +224,6 @@
       });
       continueBtn.addEventListener("click", () => finish());
 
-      /* Click the video itself to pause / unpause — no other controls */
       video.addEventListener("click", (e) => {
         e.preventDefault();
         togglePause();
@@ -204,6 +233,13 @@
       video.addEventListener("pause", syncPauseLabel);
 
       video.addEventListener("ended", () => {
+        if (opts.chainGate) {
+          /* Story done — go straight into Trial I (no continue screen) */
+          if (finished) return;
+          finished = true;
+          handoffToGate();
+          return;
+        }
         chrome.hidden = true;
         end.hidden = false;
         root.classList.remove("is-playing", "is-paused");

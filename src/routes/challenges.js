@@ -84,6 +84,12 @@ router.post("/:id/hint", requireAuth, async (req, res, next) => {
   try {
     const c = findChallenge(req.params.id);
     if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+    if (c.noHint || !c.hint) {
+      return res.status(400).json({
+        ok: false,
+        message: "This trial offers no whisper. The ash keeps its own counsel.",
+      });
+    }
 
     const cost = hintCost(c.difficulty);
     const result = await store.unlockHint(req.user.id, c.id, cost);
@@ -139,7 +145,9 @@ router.post("/:id/submit", requireAuth, async (req, res, next) => {
       });
     }
 
-    if (flag !== c.correctFlag) {
+    const offered = flag.toLowerCase();
+    const expected = String(c.correctFlag || "").trim().toLowerCase();
+    if (offered !== expected) {
       return res.status(400).json({ ok: false, message: "The spirits reject that offering." });
     }
 
