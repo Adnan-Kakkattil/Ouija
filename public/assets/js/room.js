@@ -217,7 +217,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room2-2") {
+      if (c.id === "room2-3") {
+        note.textContent = "Unlock the ZIP with clues from Room 2 challenges 1 and 2.";
+      } else if (c.id === "room2-2") {
         note.textContent = "Download the notebook page. A small Caesar shift unlocks her words.";
       } else if (c.id === "room2-1") {
         note.textContent = "Download the torn clipping. Identify the paper, then find its archive.";
