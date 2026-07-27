@@ -64,7 +64,9 @@
       els.submit.textContent = "Take my seat";
       if (err && err.field) {
         AuthUI.setError(err.field, err.message);
-        AuthUI.focusField(err.field);
+        if (document.querySelector(`[data-field="${err.field}"]`)) {
+          AuthUI.focusField(err.field);
+        }
       } else {
         AuthUI.banner((err && err.message) || "The board refused. Try once more.");
       }

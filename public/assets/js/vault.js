@@ -9,8 +9,6 @@
 
   const RULES = {
     username: /^[a-z0-9](?:[a-z0-9_.-]{1,22})[a-z0-9]$/i,
-    email: /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i,
-    teamName: /^[\p{L}\p{N}][\p{L}\p{N} '&.:_-]{2,30}$/u,
   };
 
   async function api(path, options) {

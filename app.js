@@ -118,14 +118,32 @@ function mountApp(sessionStore) {
   app.use(
     express.static(PUBLIC_DIR, {
       extensions: ["html"],
-      maxAge: IS_PROD ? "7d" : 0,
       etag: true,
       lastModified: true,
       index: false,
+      /* Avoid week-long stale signup/login JS after Hostinger auto-deploys */
+      setHeaders(res, filePath) {
+        const lower = String(filePath || "").toLowerCase();
+        if (lower.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          return;
+        }
+        if (lower.endsWith(".js") || lower.endsWith(".css")) {
+          res.setHeader("Cache-Control", "public, max-age=120, must-revalidate");
+          return;
+        }
+        if (/\.(mp4|webm|png|jpe?g|gif|svg|webp|woff2?)$/i.test(lower)) {
+          res.setHeader("Cache-Control", IS_PROD ? "public, max-age=86400" : "no-cache");
+          return;
+        }
+        res.setHeader("Cache-Control", IS_PROD ? "public, max-age=3600" : "no-cache");
+      },
     })
   );
 
   app.get("/", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(path.join(PUBLIC_DIR, "index.html"));
   });
 
