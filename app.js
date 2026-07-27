@@ -15,6 +15,19 @@
 
 const path = require("path");
 
+/*
+ * Hostinger shared Node often runs 18.x. MongoDB driver 7+ needs Node 20.19+
+ * (globalThis.crypto). We pin mongodb@6 and polyfill crypto for safety.
+ */
+(() => {
+  try {
+    const { webcrypto } = require("crypto");
+    if (!globalThis.crypto && webcrypto) globalThis.crypto = webcrypto;
+  } catch (_) {
+    /* ignore */
+  }
+})();
+
 /* Load local secrets if present; hPanel env vars always win */
 require("dotenv").config({ path: path.join(__dirname, "atlas-credentials.env"), quiet: true });
 require("dotenv").config({ path: path.join(__dirname, ".env"), quiet: true });

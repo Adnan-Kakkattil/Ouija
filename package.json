@@ -1,10 +1,11 @@
 {
   "name": "ouija-ctf",
   "version": "1.0.0",
-  "description": "Ghost-themed Ouija board CTF — Express app ready for Hostinger Node hosting",
+  "description": "Ghost-themed Ouija board CTF — Express app for Hostinger Business Node hosting",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "build": "node -e \"console.log('No build step — Express serves public/')\"",
     "dev": "node --watch app.js"
   },
   "engines": {

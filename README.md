@@ -4,6 +4,42 @@ Ghost-themed Capture The Flag with an interactive Ouija board, team signup, and 
 
 Built as an **Express** Node.js app for **Hostinger Node.js Web Apps** (and local `npm start`).
 
+## Hostinger Business (Node Web App)
+
+Compatible with **Business Web Hosting** Node.js Web Apps.
+
+### hPanel settings
+
+| Setting | Value |
+|---------|--------|
+| Framework | **Express.js** (or Other) |
+| Node.js version | **20** (preferred) or **18** |
+| Entry file | `app.js` |
+| Build command | `npm run build` |
+| Start command | `npm start` |
+| Root | repository root (where `package.json` lives) |
+
+### Environment variables (hPanel → Environment Variables)
+
+| Variable | Example |
+|----------|---------|
+| `MONGODB_URI` | `mongodb+srv://user:pass@cluster.mongodb.net` |
+| `MONGODB_DB` | `lostweeb01_db` |
+| `SESSION_SECRET` | long random string |
+| `COOKIE_SECURE` | `1` |
+| `NODE_ENV` | `production` |
+
+### MongoDB Atlas (required)
+
+1. **Network Access** → add `0.0.0.0/0` (allow Hostinger outbound IPs)
+2. Use a DB user/password in `MONGODB_URI`
+
+### Important: driver version
+
+Use **`mongodb@6`** (pinned). `mongodb@7` requires Node ≥ 20.19 and crashes on Hostinger Node 18 with `crypto is not defined`.
+
+After changing deps: **Redeploy** (or push to GitHub so Hostinger rebuilds `node_modules`).
+
 ## Stack
 
 - **Node.js 18–24** (Hostinger-supported range)

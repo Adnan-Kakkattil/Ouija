@@ -30,19 +30,20 @@
         </button>
       </div>
       <div class="rite__chrome" hidden id="riteChrome">
-        <p class="rite__label">First knock · fullscreen</p>
-        <div class="rite__actions">
-          <button class="btn btn--ghost btn--sm" type="button" id="riteMute" aria-pressed="false">Mute</button>
-          <button class="btn btn--ghost btn--sm" type="button" id="riteSkip">Skip</button>
-        </div>
+        <p class="rite__label">First knock · listening…</p>
       </div>
       <div class="rite__end" hidden id="riteEnd">
         <p class="eyebrow">Transmission complete</p>
         <h2 class="rite__title">The first knock has been answered</h2>
         <p class="rite__lede">Your first trial waits at the table. Look for what the living hid badly.</p>
-        <button class="btn btn--primary btn--lg" type="button" id="riteContinue">
-          Continue to the table
-        </button>
+        <div class="rite__end-actions">
+          <button class="btn btn--spectral btn--lg" type="button" id="riteReplay">
+            Replay transmission
+          </button>
+          <button class="btn btn--primary btn--lg" type="button" id="riteContinue">
+            Continue to the table
+          </button>
+        </div>
       </div>
     `;
     document.body.appendChild(root);
@@ -90,21 +91,14 @@
       const chrome = root.querySelector("#riteChrome");
       const end = root.querySelector("#riteEnd");
       const beginBtn = root.querySelector("#riteBegin");
-      const skipBtn = root.querySelector("#riteSkip");
-      const muteBtn = root.querySelector("#riteMute");
+      const replayBtn = root.querySelector("#riteReplay");
       const continueBtn = root.querySelector("#riteContinue");
 
       let finished = false;
-      let keyHandler = null;
 
-      function cleanup() {
-        if (keyHandler) document.removeEventListener("keydown", keyHandler);
-      }
-
-      function finish(skipped) {
+      function finish() {
         if (finished) return;
         finished = true;
-        cleanup();
         sessionStorage.setItem(SEEN_KEY, "1");
         exitDomFullscreen();
         try {
@@ -115,8 +109,7 @@
         root.classList.add("is-leaving");
         setTimeout(() => {
           root.remove();
-          const result = { skipped: !!skipped };
-          if (typeof opts.onDone === "function") opts.onDone(result);
+          if (typeof opts.onDone === "function") opts.onDone({ skipped: false });
           resolve(true);
         }, 420);
       }
@@ -132,6 +125,7 @@
       async function startPlayback() {
         video.muted = false;
         video.volume = 1;
+        video.currentTime = 0;
         showPlaying();
         await requestDomFullscreen(root);
         try {
@@ -145,17 +139,19 @@
         }
       }
 
+      async function replay() {
+        end.hidden = true;
+        root.classList.remove("is-ended");
+        await startPlayback();
+      }
+
       beginBtn.addEventListener("click", () => {
         startPlayback();
       });
-      skipBtn.addEventListener("click", () => finish(true));
-      continueBtn.addEventListener("click", () => finish(false));
-
-      muteBtn.addEventListener("click", () => {
-        video.muted = !video.muted;
-        muteBtn.setAttribute("aria-pressed", String(video.muted));
-        muteBtn.textContent = video.muted ? "Unmute" : "Mute";
+      replayBtn.addEventListener("click", () => {
+        replay();
       });
+      continueBtn.addEventListener("click", () => finish());
 
       video.addEventListener("ended", () => {
         chrome.hidden = true;
@@ -167,19 +163,10 @@
 
       video.addEventListener("error", () => {
         if (window.Atmosphere) Atmosphere.toast("The transmission could not be received.", "error");
-        finish(true);
+        finish();
       });
 
-      keyHandler = (e) => {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          finish(true);
-        }
-      };
-      document.addEventListener("keydown", keyHandler);
-
       root.classList.add("is-open");
-      /* Attempt immediate play while we may still have user activation */
       startPlayback();
     });
   }
