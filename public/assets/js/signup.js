@@ -74,12 +74,33 @@
   function welcome(user) {
     const screen = document.getElementById("welcome");
     const stage = document.getElementById("welcomeBoard");
+    const title = document.getElementById("welcomeTitle");
+    const note = document.getElementById("welcomeNote");
+
+    const displayName = (user && user.username) || "medium";
+    if (title) title.textContent = displayName;
+    if (note) note.textContent = "The board is spelling your welcome…";
 
     const finish = async () => {
-      const played = await Vault.playIntro(user, () => {
-        Vault.go("dashboard.html", { instant: true });
-      });
-      if (played) return;
+      if (screen) {
+        screen.classList.remove("is-open");
+        screen.setAttribute("aria-hidden", "true");
+      }
+      if (stage && stage.ouija) {
+        try {
+          stage.ouija.stop();
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      try {
+        const played = await Vault.playIntro(user, () => {
+          Vault.go("dashboard.html", { instant: true });
+        });
+        if (played) return;
+      } catch (err) {
+        console.error("[signup] intro failed", err);
+      }
       Vault.go("dashboard.html", { instant: true });
     };
 
@@ -89,7 +110,7 @@
 
     screen.classList.add("is-open");
     screen.setAttribute("aria-hidden", "false");
-    const name = user.username.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const name = displayName.toUpperCase().replace(/[^A-Z0-9]/g, "");
     const phrase = ("WELCOME " + (name || "MEDIUM")).slice(0, 22);
 
     return new Promise((resolve) => {
@@ -97,7 +118,8 @@
       const go = () => {
         if (done) return;
         done = true;
-        finish().then(resolve);
+        if (note) note.textContent = "Taking you to the table…";
+        finish().then(resolve).catch(resolve);
       };
 
       stage.addEventListener("ouija:spell-end", () => setTimeout(go, 500), { once: true });

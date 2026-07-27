@@ -157,13 +157,20 @@
 
     async playIntro(user, onDone) {
       const go = typeof onDone === "function" ? onDone : function () {};
+      const wrapped = (result) => {
+        if (result && result.next) {
+          this.go(result.next, { instant: true });
+          return;
+        }
+        go(result);
+      };
       if (this.needsStory(user) && window.FirstRite) {
         FirstRite.reset();
-        await FirstRite.play({ force: true, chainGate: true, onDone: go });
+        await FirstRite.play({ force: true, chainGate: true, onDone: wrapped });
         return true;
       }
       if (this.needsFirstGate(user) && window.FirstGate) {
-        await FirstGate.play({ onDone: go });
+        await FirstGate.play({ onDone: wrapped });
         return true;
       }
       return false;

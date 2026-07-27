@@ -16,11 +16,16 @@
 
   function setError(name, message) {
     const field = fieldEl(name);
-    if (!field) return;
+    /* If the page no longer has that field (e.g. legacy API error), surface it. */
+    if (!field) {
+      banner(message || "The board refused.");
+      return false;
+    }
     const slot = field.querySelector(".field__error");
     field.classList.add("has-error");
     field.classList.remove("is-valid");
     if (slot) slot.textContent = message;
+    return true;
   }
 
   function clearError(name) {

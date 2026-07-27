@@ -1,13 +1,15 @@
 /* =========================================================
    OUIJA CTF — Challenge I gate (burned paper key)
-   Fullscreen prevideo → blurred Ouija modal asking for the key.
+   Fullscreen prevideo → key modal → post video → room reveal.
    ========================================================= */
 
 (function () {
   "use strict";
 
   const SRC = "assets/video/challenge1Prevideo.mp4";
+  const POST_SRC = "assets/video/challenge1videopost2.mp4";
   const CHALLENGE_ID = "whisper-1";
+  const ROOM_ONE_URL = "challenges.html";
 
   function requestDomFullscreen(el) {
     const target = el || document.documentElement;
@@ -77,6 +79,51 @@
           <p class="burn-sheet__note">No hints. The ash keeps its own counsel.</p>
         </div>
       </div>
+      <div class="gate__reveal" hidden id="gateReveal">
+        <div class="gate-reveal" role="document">
+          <p class="gate-reveal__eyebrow">Trial I · The first room</p>
+          <h2 class="gate-reveal__title">Inside the mansion</h2>
+          <div class="gate-reveal__scroll">
+            <p class="gate-reveal__prose">
+              A thick layer of dust fills the air as moonlight shines through broken windows.
+              The room appears untouched for years. An old rocking chair sways gently on its own,
+              though there is no wind. Family portraits hang crooked on the walls, their faces
+              faded with time. A music box plays a soft melody before suddenly stopping.
+            </p>
+            <p class="gate-reveal__prose">
+              Scattered around the room are signs that someone had been here recently.
+            </p>
+            <p class="gate-reveal__lead">As they search, they discover:</p>
+            <ul class="gate-reveal__finds">
+              <li><span class="gate-reveal__glyph" aria-hidden="true">📖</span> A torn diary page hidden beneath the rocking chair.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">✝️</span> A strange prayer written across the wall in an unfamiliar script.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">📦</span> A small locked wooden box tucked inside an old cabinet.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">📓</span> A password-protected journal lying on the table.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">🖼️</span> A family portrait hanging slightly crooked.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">🎵</span> An old music box still capable of playing a haunting melody.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">💾</span> A dusty USB drive labelled &ldquo;DO NOT OPEN&rdquo; hidden inside a drawer.</li>
+              <li><span class="gate-reveal__glyph" aria-hidden="true">📜</span> A mysterious ritual paper placed beside an extinguished candle.</li>
+            </ul>
+            <p class="gate-reveal__prose">
+              Every object seems to hold a piece of the mansion&rsquo;s past.
+            </p>
+            <p class="gate-reveal__prose">
+              Some reveal the story of Olivia.
+            </p>
+            <p class="gate-reveal__prose">
+              Others hint at a far older secret hidden somewhere within the house.
+            </p>
+            <p class="gate-reveal__closing">
+              Perhaps the answers lie in the basement she feared so much&hellip;
+            </p>
+          </div>
+          <div class="gate-reveal__actions">
+            <button class="btn btn--primary btn--lg" type="button" id="gateRoomOne">
+              Start Room 1 Challenge
+            </button>
+          </div>
+        </div>
+      </div>
     `;
     const video = root.querySelector("#gateVideo");
     const source = document.createElement("source");
@@ -96,14 +143,18 @@
       const veil = root.querySelector("#gateVeil");
       const chrome = root.querySelector("#gateChrome");
       const modal = root.querySelector("#gateModal");
+      const reveal = root.querySelector("#gateReveal");
       const beginBtn = root.querySelector("#gateBegin");
       const pauseBtn = root.querySelector("#gatePause");
       const form = root.querySelector("#gateForm");
       const keyInput = root.querySelector("#gateKey");
       const errEl = root.querySelector("#gateError");
       const submitBtn = root.querySelector("#gateSubmit");
+      const roomOneBtn = root.querySelector("#gateRoomOne");
 
       let finished = false;
+      let phase = "pre"; /* pre | post | reveal */
+      let solvedPayload = { solved: true, user: null, next: ROOM_ONE_URL };
 
       function syncPauseLabel() {
         const paused = video.paused;
@@ -132,20 +183,42 @@
       function showPlaying() {
         veil.hidden = true;
         modal.hidden = true;
+        reveal.hidden = true;
         chrome.hidden = false;
         root.classList.add("is-playing");
-        root.classList.remove("is-ended", "is-asking");
+        root.classList.remove("is-ended", "is-asking", "is-reveal");
         syncPauseLabel();
       }
 
       function showKeyModal() {
+        phase = "pre";
         chrome.hidden = true;
         veil.hidden = true;
+        reveal.hidden = true;
         modal.hidden = false;
-        root.classList.remove("is-playing", "is-paused");
+        root.classList.remove("is-playing", "is-paused", "is-reveal");
         root.classList.add("is-ended", "is-asking");
         exitDomFullscreen();
         setTimeout(() => keyInput.focus(), 80);
+      }
+
+      function showReveal() {
+        phase = "reveal";
+        try {
+          video.pause();
+        } catch (_) {
+          /* ignore */
+        }
+        chrome.hidden = true;
+        veil.hidden = true;
+        modal.hidden = true;
+        reveal.hidden = false;
+        root.classList.remove("is-playing", "is-paused", "is-asking");
+        root.classList.add("is-ended", "is-reveal");
+        exitDomFullscreen();
+        const scroll = reveal.querySelector(".gate-reveal__scroll");
+        if (scroll) scroll.scrollTop = 0;
+        setTimeout(() => roomOneBtn.focus(), 80);
       }
 
       async function enterFullscreen() {
@@ -172,8 +245,53 @@
         }
       }
 
+      async function playPostVideo() {
+        phase = "post";
+        modal.hidden = true;
+        reveal.hidden = true;
+        veil.hidden = true;
+        while (video.firstChild) video.removeChild(video.firstChild);
+        const source = document.createElement("source");
+        source.src = POST_SRC;
+        source.type = "video/mp4";
+        video.appendChild(source);
+        try {
+          video.load();
+        } catch (_) {
+          /* ignore */
+        }
+        video.muted = false;
+        video.volume = 1;
+        video.controls = false;
+        video.currentTime = 0;
+        showPlaying();
+        await enterFullscreen();
+        try {
+          await video.play();
+          syncPauseLabel();
+        } catch (err) {
+          console.warn("[gate] post video autoplay blocked", err);
+          chrome.hidden = true;
+          root.classList.remove("is-playing");
+          veil.hidden = false;
+          beginBtn.textContent = "Continue";
+        }
+      }
+
+      async function startPostFromVeil() {
+        showPlaying();
+        await enterFullscreen();
+        try {
+          await video.play();
+          syncPauseLabel();
+        } catch (_) {
+          showReveal();
+        }
+      }
+
       async function togglePause() {
         if (!root.classList.contains("is-playing") || root.classList.contains("is-asking")) return;
+        if (phase === "reveal") return;
         try {
           if (video.paused) {
             await enterFullscreen();
@@ -187,7 +305,13 @@
         syncPauseLabel();
       }
 
-      beginBtn.addEventListener("click", () => startPlayback());
+      beginBtn.addEventListener("click", () => {
+        if (phase === "post") {
+          startPostFromVeil();
+          return;
+        }
+        startPlayback();
+      });
       pauseBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         togglePause();
@@ -200,10 +324,20 @@
       video.addEventListener("pause", syncPauseLabel);
 
       video.addEventListener("ended", () => {
+        if (phase === "post") {
+          showReveal();
+          return;
+        }
         showKeyModal();
       });
 
       video.addEventListener("error", () => {
+        if (finished || phase === "reveal") return;
+        if (phase === "post") {
+          if (window.Atmosphere) Atmosphere.toast("The next vision could not be shown.", "error");
+          showReveal();
+          return;
+        }
         if (window.Atmosphere) Atmosphere.toast("The burned leaf could not be shown.", "error");
         showKeyModal();
       });
@@ -221,10 +355,15 @@
         submitBtn.disabled = true;
         try {
           const data = await Vault.submitFlag(CHALLENGE_ID, key);
+          solvedPayload = {
+            solved: true,
+            user: data.user || null,
+            next: ROOM_ONE_URL,
+          };
           if (window.Atmosphere) {
-            Atmosphere.toast(data.message || "The first door opens.", "success", 3200);
+            Atmosphere.toast(data.message || "The first door opens.", "success", 2200);
           }
-          finish({ solved: true, user: data.user || null });
+          await playPostVideo();
         } catch (err) {
           errEl.textContent = (err && err.message) || "The spirits reject that key.";
           keyInput.select();
@@ -234,6 +373,10 @@
         }
       });
 
+      roomOneBtn.addEventListener("click", () => {
+        finish(solvedPayload);
+      });
+
       root.classList.add("is-open");
       startPlayback();
     });
@@ -241,6 +384,7 @@
 
   window.FirstGate = {
     SRC,
+    POST_SRC,
     CHALLENGE_ID,
     play,
   };

@@ -46,22 +46,30 @@ function pickCookie(setCookieHeaders) {
 
 (async () => {
   const stamp = Date.now().toString(36);
-  const teams = await req("GET", "/api/auth/teams");
-  const teamId = JSON.parse(teams.body).teams[0].id;
+  const username = "sitter_" + stamp;
+  const password = "SpiritPass9!";
 
   const signup = await req("POST", "/api/auth/signup", {
-    username: "sitter_" + stamp,
-    email: `sitter_${stamp}@blackmoor.row`,
-    password: "SpiritPass9!",
-    teamId,
+    username,
+    password,
+    agree: true,
   });
-  console.log("signup", signup.status, pickCookie(signup.cookies) ? "cookie=yes" : "cookie=NO", signup.body.slice(0, 160));
-  console.log("set-cookie", signup.cookies);
+  console.log(
+    "signup",
+    signup.status,
+    pickCookie(signup.cookies) ? "cookie=yes" : "cookie=NO",
+    signup.body.slice(0, 180)
+  );
 
   let cookie = pickCookie(signup.cookies);
+  if (signup.status !== 201 || !cookie) {
+    console.error("FAIL: signup must return 201 + session cookie");
+    process.exit(1);
+  }
 
   const me = await req("GET", "/api/auth/me", null, cookie);
-  console.log("me", me.status, me.body);
+  const meUser = JSON.parse(me.body).user;
+  console.log("me", me.status, meUser && meUser.username);
 
   const challenges = await req("GET", "/api/challenges", null, cookie);
   const parsed = JSON.parse(challenges.body);
@@ -70,25 +78,18 @@ function pickCookie(setCookieHeaders) {
   const submit = await req(
     "POST",
     "/api/challenges/whisper-1/submit",
-    { flag: "ouija{first_knock_answered}" },
+    { flag: "intothevictorianmansion" },
     cookie
   );
-  console.log("submit", submit.status, submit.body);
+  console.log("submit", submit.status, submit.body.slice(0, 120));
 
   await req("POST", "/api/auth/logout", {}, cookie);
 
-  const loginEmail = await req("POST", "/api/auth/login", {
-    identifier: `sitter_${stamp}@blackmoor.row`,
-    password: "SpiritPass9!",
-  });
-  cookie = pickCookie(loginEmail.cookies);
-  console.log("loginEmail", loginEmail.status, cookie ? "cookie=yes" : "cookie=NO");
-
   const loginUser = await req("POST", "/api/auth/login", {
-    identifier: "sitter_" + stamp,
-    password: "SpiritPass9!",
+    identifier: username,
+    password,
   });
-  cookie = pickCookie(loginUser.cookies) || cookie;
+  cookie = pickCookie(loginUser.cookies);
   console.log("loginUser", loginUser.status, cookie ? "cookie=yes" : "cookie=NO");
 
   const me2 = await req("GET", "/api/auth/me", null, cookie);
@@ -97,7 +98,30 @@ function pickCookie(setCookieHeaders) {
   const pages = ["/", "/signup.html", "/login.html", "/dashboard.html", "/challenges.html"];
   for (const p of pages) {
     const r = await req("GET", p);
-    console.log("page", p, r.status);
+    const html = r.body || "";
+    if (p === "/signup.html") {
+      const hasEmail = /id=["']email["']/.test(html);
+      const hasWelcome = /id=["']welcome["']/.test(html);
+      const hasWelcomeTitle = /id=["']welcomeTitle["']/.test(html);
+      console.log(
+        "page",
+        p,
+        r.status,
+        "emailField=" + hasEmail,
+        "welcome=" + hasWelcome,
+        "welcomeTitle=" + hasWelcomeTitle
+      );
+      if (hasEmail) {
+        console.error("FAIL: signup.html should not ask for email");
+        process.exit(1);
+      }
+      if (!hasWelcome || !hasWelcomeTitle) {
+        console.error("FAIL: signup welcome UI incomplete");
+        process.exit(1);
+      }
+    } else {
+      console.log("page", p, r.status);
+    }
   }
 
   console.log("DONE");

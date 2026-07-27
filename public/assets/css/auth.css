@@ -201,7 +201,7 @@
 .welcome {
   position: fixed;
   inset: 0;
-  z-index: var(--z-modal);
+  z-index: 9000;
   display: grid;
   place-items: center;
   padding: var(--sp-5);
@@ -235,7 +235,12 @@
 }
 
 .welcome__title {
-  font-size: var(--fs-lg);
+  margin: 0;
+  font-family: var(--font-display, Cinzel, serif);
+  font-size: clamp(1.45rem, 4vw, 2.2rem);
+  letter-spacing: 0.08em;
+  color: var(--parchment-100, #f4ecd8);
+  line-height: 1.15;
 }
 
 .welcome__slate {
