@@ -51,6 +51,26 @@ const store = {
     await teams().insertMany(seeded);
   },
 
+  /* Registration no longer asks for a circle — seat everyone in the first seeded team */
+  async defaultTeamId() {
+    await this.seedTeams();
+    const team = await teams().find({ seeded: true }, { projection: { _id: 0, id: 1 } }).sort({ name: 1 }).limit(1).next();
+    if (team) return team.id;
+    const any = await teams().find({}, { projection: { _id: 0, id: 1 } }).limit(1).next();
+    if (any) return any.id;
+    const made = await this.createTeam("Wanderers of the Board");
+    return made.id;
+  },
+
+  async markStorySeen(userId) {
+    if (!userId) return null;
+    await users().updateOne(
+      { id: userId },
+      { $set: { storySeenAt: Date.now() } }
+    );
+    return this.findUserById(userId);
+  },
+
   async listUsers() {
     return users().find({}, { projection: { _id: 0 } }).toArray();
   },
@@ -463,6 +483,8 @@ const store = {
       lastLoginAt: user.lastLoginAt || null,
       lastChallengeId: user.lastChallengeId || null,
       lastChallengeAt: user.lastChallengeAt || null,
+      storySeen: !!user.storySeenAt,
+      storySeenAt: user.storySeenAt || null,
       resumePath: this.resumePath(user),
       teamProgress: teamProg
         ? {

@@ -1,6 +1,6 @@
 /* =========================================================
-   OUIJA CTF — The Story (first video / CTF prologue)
-   Fullscreen video with sound. Triggered after first sitting.
+   OUIJA CTF — The Story (first login prologue)
+   Auto fullscreen. Only control while playing: pause / unpause.
    ========================================================= */
 
 (function () {
@@ -18,43 +18,49 @@
     root.setAttribute("aria-modal", "true");
     root.setAttribute("aria-label", "The Story — OUIJA CTF");
     root.innerHTML = `
-      <video class="rite__video" id="riteVideo" playsinline preload="auto">
-        <source src="${SRC}" type="video/mp4">
-      </video>
+      <video class="rite__video" id="riteVideo" playsinline preload="auto"></video>
       <div class="rite__veil" id="riteVeil">
         <p class="eyebrow">Prologue · The Story</p>
         <h2 class="rite__title">How this house woke</h2>
-        <p class="rite__lede">Before the trials, the story. Sound on. Do not look away.</p>
+        <p class="rite__lede">Before the trials, the story. Sound on.</p>
         <button class="btn btn--primary btn--lg" type="button" id="riteBegin">
           Begin the story
         </button>
       </div>
       <div class="rite__chrome" hidden id="riteChrome">
-        <p class="rite__label">The story unfolds…</p>
+        <button class="rite__pause" type="button" id="ritePause" aria-label="Pause">
+          Pause
+        </button>
       </div>
       <div class="rite__end" hidden id="riteEnd">
         <p class="eyebrow">Story complete</p>
         <h2 class="rite__title">The board is waiting</h2>
-        <p class="rite__lede">Many trials lie ahead. Track your progress — and your circle’s. Hints cost points.</p>
+        <p class="rite__lede">Many trials lie ahead. Your circle’s progress is already being kept.</p>
         <div class="rite__end-actions">
-          <button class="btn btn--spectral btn--lg" type="button" id="riteReplay">
-            Replay the story
-          </button>
           <button class="btn btn--primary btn--lg" type="button" id="riteContinue">
             Continue to the table
           </button>
         </div>
       </div>
     `;
+    const video = root.querySelector("#riteVideo");
+    const source = document.createElement("source");
+    source.src = SRC;
+    source.type = "video/mp4";
+    video.appendChild(source);
     document.body.appendChild(root);
     return root;
   }
 
   function requestDomFullscreen(el) {
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    const target = el || document.documentElement;
+    const req =
+      target.requestFullscreen ||
+      target.webkitRequestFullscreen ||
+      target.msRequestFullscreen;
     if (!req) return Promise.resolve(false);
     return req
-      .call(el)
+      .call(target)
       .then(() => true)
       .catch(() => false);
   }
@@ -72,10 +78,14 @@
     }
   }
 
+  function markSeenServer() {
+    if (!window.Vault || typeof Vault.markStorySeen !== "function") return Promise.resolve();
+    return Vault.markStorySeen().catch(() => {});
+  }
+
   /**
-   * Play the CTF story fullscreen with sound.
-   * Browsers may block unmuted autoplay after an await — the Begin
-   * button always works because it is a fresh user gesture.
+   * Play the CTF story in fullscreen with sound.
+   * While playing, only pause / unpause is available.
    */
   function play(options) {
     const opts = Object.assign({ force: false, onDone: null }, options || {});
@@ -91,15 +101,23 @@
       const chrome = root.querySelector("#riteChrome");
       const end = root.querySelector("#riteEnd");
       const beginBtn = root.querySelector("#riteBegin");
-      const replayBtn = root.querySelector("#riteReplay");
+      const pauseBtn = root.querySelector("#ritePause");
       const continueBtn = root.querySelector("#riteContinue");
 
       let finished = false;
+
+      function syncPauseLabel() {
+        const paused = video.paused;
+        pauseBtn.textContent = paused ? "Play" : "Pause";
+        pauseBtn.setAttribute("aria-label", paused ? "Play" : "Pause");
+        root.classList.toggle("is-paused", paused);
+      }
 
       function finish() {
         if (finished) return;
         finished = true;
         sessionStorage.setItem(SEEN_KEY, "1");
+        markSeenServer();
         exitDomFullscreen();
         try {
           video.pause();
@@ -120,16 +138,29 @@
         chrome.hidden = false;
         root.classList.add("is-playing");
         root.classList.remove("is-ended");
+        syncPauseLabel();
+      }
+
+      async function enterFullscreen() {
+        /* Prefer the story overlay, then the whole document (F11-like). */
+        const ok = await requestDomFullscreen(root);
+        if (!ok) await requestDomFullscreen(document.documentElement);
       }
 
       async function startPlayback() {
         video.muted = false;
         video.volume = 1;
-        video.currentTime = 0;
+        video.controls = false;
+        if (video.currentTime > 0.2 && !video.paused) {
+          /* already playing */
+        } else if (video.ended || video.currentTime === 0) {
+          video.currentTime = 0;
+        }
         showPlaying();
-        await requestDomFullscreen(root);
+        await enterFullscreen();
         try {
           await video.play();
+          syncPauseLabel();
         } catch (err) {
           chrome.hidden = true;
           veil.hidden = false;
@@ -139,26 +170,47 @@
         }
       }
 
-      async function replay() {
-        end.hidden = true;
-        root.classList.remove("is-ended");
-        await startPlayback();
+      async function togglePause() {
+        if (!root.classList.contains("is-playing") || end.hidden === false) return;
+        try {
+          if (video.paused) {
+            await enterFullscreen();
+            await video.play();
+          } else {
+            video.pause();
+          }
+        } catch (_) {
+          /* ignore */
+        }
+        syncPauseLabel();
       }
 
       beginBtn.addEventListener("click", () => {
         startPlayback();
       });
-      replayBtn.addEventListener("click", () => {
-        replay();
+      pauseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        togglePause();
       });
       continueBtn.addEventListener("click", () => finish());
+
+      /* Click the video itself to pause / unpause — no other controls */
+      video.addEventListener("click", (e) => {
+        e.preventDefault();
+        togglePause();
+      });
+
+      video.addEventListener("play", syncPauseLabel);
+      video.addEventListener("pause", syncPauseLabel);
 
       video.addEventListener("ended", () => {
         chrome.hidden = true;
         end.hidden = false;
-        root.classList.remove("is-playing");
+        root.classList.remove("is-playing", "is-paused");
         root.classList.add("is-ended");
         exitDomFullscreen();
+        markSeenServer();
+        sessionStorage.setItem(SEEN_KEY, "1");
       });
 
       video.addEventListener("error", () => {

@@ -79,8 +79,7 @@
         <p class="eyebrow">Entry</p>
         <h1>Enter the séance</h1>
         <p>
-          Your medium name or the address you registered with — the
-          board answers to either.
+          Your username and password — the board answers when both are true.
         </p>
       </header>
 
@@ -93,11 +92,10 @@
 
       <div class="auth__fields">
 
-        <!-- Identifier: username OR email -->
+        <!-- Identifier: username (email still works for older accounts) -->
         <div class="field" data-field="identifier">
           <label class="field__label" for="identifier">
-            <span>Medium name or address</span>
-            <span class="field__hint">username or email</span>
+            <span>Username</span>
           </label>
           <div class="field__shell">
             <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -105,7 +103,7 @@
             </svg>
             <input class="field__input" id="identifier" name="identifier" type="text"
                    autocomplete="username" spellcheck="false" maxlength="120"
-                   placeholder="the_pale_lantern &nbsp;or&nbsp; you@blackmoor.row" required
+                   placeholder="the_pale_lantern" required
                    aria-describedby="identifierError">
           </div>
           <p class="field__error" id="identifierError" role="alert"></p>
@@ -114,7 +112,7 @@
         <!-- Passphrase -->
         <div class="field" data-field="password">
           <label class="field__label" for="password">
-            <span>Passphrase</span>
+            <span>Password</span>
           </label>
           <div class="field__shell">
             <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -122,11 +120,11 @@
               <path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/>
             </svg>
             <input class="field__input" id="password" name="password" type="password"
-                   autocomplete="current-password" maxlength="200"
+                   autocomplete="current-password" maxlength="512"
                    placeholder="••••••••" required
                    aria-describedby="passwordError">
             <button class="field__peek" type="button" data-peek="password"
-                    aria-label="Show passphrase" aria-pressed="false">
+                    aria-label="Show password" aria-pressed="false">
               <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
                 <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/>
                 <circle cx="12" cy="12" r="2.9"/>

@@ -125,10 +125,8 @@ router.get("/leaderboard", async (_req, res, next) => {
 router.post("/signup", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
-    const email = String(req.body.email || "").trim();
     const password = String(req.body.password || "");
-    let teamId = String(req.body.teamId || "");
-    const newTeamName = String(req.body.newTeamName || "").trim();
+    const agree = !!req.body.agree;
 
     if (!username) return fail(res, 400, "username", "Every medium needs a name.");
     if (!RULES.username.test(username)) {
@@ -139,39 +137,19 @@ router.post("/signup", async (req, res) => {
         "3–24 characters: letters, numbers, and . _ - (must start and end with a letter or number)."
       );
     }
-    if (!email) return fail(res, 400, "email", "We need somewhere to send the summons.");
-    if (!RULES.email.test(email)) return fail(res, 400, "email", "That address does not resolve.");
-    if (password.length < 8) {
-      return fail(res, 400, "password", "At least 8 characters — the veil is thin, but not that thin.");
-    }
-    if (password.length > 200) return fail(res, 400, "password", "That incantation is too long.");
+    if (!password) return fail(res, 400, "password", "Choose a password.");
+    if (password.length > 512) return fail(res, 400, "password", "That password is too long.");
+    if (!agree) return fail(res, 400, "agree", "You must accept the terms & conditions.");
 
     const nameKey = username.toLowerCase();
-    const mailKey = email.toLowerCase();
-
     if (await store.findUserByLogin(username)) {
       return fail(res, 409, "username", "Another medium already answers to that name.");
     }
-    if (await store.findUserByLogin(email)) {
-      return fail(res, 409, "email", "That address is already bound to a medium.");
-    }
 
-    if (teamId === "__new__" || (!teamId && newTeamName)) {
-      if (!RULES.teamName.test(newTeamName)) {
-        return fail(
-          res,
-          400,
-          "teamName",
-          "3–32 characters. Letters, numbers, spaces and ' & . : _ - only."
-        );
-      }
-      const team = await store.createTeam(newTeamName);
-      teamId = team.id;
-    } else if (!teamId) {
-      return fail(res, 400, "team", "Choose the circle you sit with.");
-    } else if (!(await store.findTeam(teamId))) {
-      return fail(res, 400, "team", "That circle has dissolved. Pick another.");
-    }
+    /* Auto-seat in a default circle — registration no longer asks for team/email */
+    const teamId = await store.defaultTeamId();
+    const email = nameKey + "@local.ouija";
+    const mailKey = email;
 
     const hash = await bcrypt.hash(password, 12);
     const user = {
@@ -192,6 +170,7 @@ router.post("/signup", async (req, res) => {
       lastLoginAt: null,
       lastChallengeId: null,
       lastChallengeAt: null,
+      storySeenAt: null,
       createdAt: Date.now(),
       passwordHash: hash,
     };
@@ -200,20 +179,11 @@ router.post("/signup", async (req, res) => {
       await store.createUser(user);
     } catch (err) {
       if (err && err.code === 11000) {
-        const field = String(err.message || "").includes("emailKey") ? "email" : "username";
-        return fail(
-          res,
-          409,
-          field,
-          field === "email"
-            ? "That address is already bound to a medium."
-            : "Another medium already answers to that name."
-        );
+        return fail(res, 409, "username", "Another medium already answers to that name.");
       }
       throw err;
     }
 
-    await store.setTeamFounder(teamId, user.id);
     await store.recordLogin(user.id, clientMeta(req, false));
 
     await saveSession(req, user.id, 12 * 60 * 60 * 1000);
@@ -225,14 +195,24 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+router.post("/story-seen", requireAuth, async (req, res, next) => {
+  try {
+    await store.markStorySeen(req.user.id);
+    const fresh = await store.findUserById(req.user.id);
+    res.json({ ok: true, user: await store.publicUser(fresh) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/login", async (req, res) => {
   try {
     const identifier = String(req.body.identifier || "").trim();
     const password = String(req.body.password || "");
     const remember = !!req.body.remember;
 
-    if (!identifier) return fail(res, 400, "identifier", "Name yourself, or give your address.");
-    if (!password) return fail(res, 400, "password", "The passphrase is missing.");
+    if (!identifier) return fail(res, 400, "identifier", "Enter your username.");
+    if (!password) return fail(res, 400, "password", "The password is missing.");
 
     const user = await store.findUserByLogin(identifier);
     const rejection = "The spirits do not recognise that pairing.";

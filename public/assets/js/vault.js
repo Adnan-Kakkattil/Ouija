@@ -136,6 +136,20 @@
       return data;
     },
 
+    async markStorySeen() {
+      const data = await api("/api/auth/story-seen", { method: "POST", body: {} });
+      if (data.user) cachedUser = data.user;
+      return data;
+    },
+
+    needsStory(user) {
+      if (!user) return false;
+      if (user.storySeen) return false;
+      /* Anyone who already has trial progress has already been through the house */
+      if (this.hasProgress(user)) return false;
+      return true;
+    },
+
     async unlockHint(id) {
       const data = await api("/api/challenges/" + encodeURIComponent(id) + "/hint", {
         method: "POST",

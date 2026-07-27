@@ -23,14 +23,12 @@
   const rules = {
     identifier() {
       const v = els.identifier.value.trim();
-      if (!v) return "Name yourself, or give your address.";
-      const looksLikeEmail = v.includes("@");
-      if (looksLikeEmail && !Vault.RULES.email.test(v)) return "That address does not resolve.";
-      if (!looksLikeEmail && v.length < 3) return "At least 3 characters.";
+      if (!v) return "Enter your username.";
+      if (v.length < 3) return "At least 3 characters.";
       return "";
     },
     password() {
-      if (!els.password.value) return "The passphrase is missing.";
+      if (!els.password.value) return "The password is missing.";
       return "";
     },
   };
@@ -64,10 +62,9 @@
       const defaultNext = "dashboard.html";
       const explicitNext = next !== defaultNext;
       const dest = explicitNext ? next : Vault.resumeUrl(user, defaultNext);
-      const returning = Vault.hasProgress(user);
 
-      /* First-knock video only for brand-new mediums with no progress */
-      if (!returning && window.FirstRite) {
+      /* First login / unseen story — fullscreen prologue, pause/play only */
+      if (Vault.needsStory(user) && window.FirstRite) {
         FirstRite.reset();
         await FirstRite.play({
           force: true,

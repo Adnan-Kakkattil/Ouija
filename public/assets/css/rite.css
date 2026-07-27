@@ -31,6 +31,7 @@
   height: 100%;
   object-fit: contain;
   background: #000;
+  cursor: pointer;
 }
 
 .rite.is-playing .rite__video {
@@ -81,18 +82,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem clamp(1rem, 3vw, 2rem) 1.25rem;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  padding: 1rem clamp(1rem, 3vw, 2rem) 1.5rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
   pointer-events: none;
 }
 
-.rite__label {
+.rite__pause {
+  pointer-events: all;
+  appearance: none;
+  border: 1px solid rgba(244, 236, 216, 0.35);
+  background: rgba(8, 6, 12, 0.55);
+  color: rgba(244, 236, 216, 0.92);
   font-family: var(--font-type, "Special Elite", monospace);
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(244, 236, 216, 0.7);
-  margin: 0;
+  padding: 0.65rem 1.35rem;
+  cursor: pointer;
+}
+
+.rite__pause:hover,
+.rite__pause:focus-visible {
+  border-color: rgba(244, 236, 216, 0.7);
+  outline: none;
+}
+
+.rite.is-paused .rite__pause {
+  border-color: rgba(201, 162, 89, 0.65);
+  color: #e8d5a8;
 }
 
 .rite__end-actions {
