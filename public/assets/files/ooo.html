@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olivia's Diary — Torn Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0b0b;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  font-family:serif;
+  padding:1.5rem 1rem 2rem;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.04),transparent 30%),
+    radial-gradient(circle at 75% 60%,rgba(255,255,255,.03),transparent 35%),
+    radial-gradient(circle at 60% 10%,rgba(255,255,255,.02),transparent 25%);
+  animation:fog 18s linear infinite;
+  pointer-events:none;
+}
+@keyframes fog{
+  0%{transform:translateX(-35px)}
+  50%{transform:translateX(35px)}
+  100%{transform:translateX(-35px)}
+}
+.toolbar{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:.65rem;
+  justify-content:center;
+  margin-bottom:1.25rem;
+  max-width:760px;
+  width:100%;
+}
+.toolbar button{
+  appearance:none;
+  border:1px solid rgba(244,236,216,.35);
+  background:rgba(8,6,12,.72);
+  color:#f4ecd8;
+  font-family:"Cinzel",serif;
+  font-size:.78rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  padding:.7rem 1.1rem;
+  cursor:pointer;
+}
+.toolbar button:hover,
+.toolbar button:focus-visible{
+  border-color:rgba(217,169,74,.7);
+  color:#eec97a;
+  outline:none;
+}
+.toolbar button:disabled{
+  opacity:.55;
+  cursor:wait;
+}
+.toolbar__note{
+  width:100%;
+  text-align:center;
+  color:rgba(196,179,148,.75);
+  font-size:.85rem;
+  letter-spacing:.04em;
+}
+.stage{position:relative;z-index:1;width:100%;display:flex;justify-content:center}
+.paper{
+  position:relative;
+  width:760px;
+  max-width:95%;
+  padding:55px 65px 65px 95px;
+  background:#efe2bf;
+  border-radius:3px;
+  transform:rotate(-2deg);
+  box-shadow:0 0 60px rgba(0,0,0,.85),inset 0 0 70px rgba(60,40,10,.25);
+  overflow:hidden;
+  background-image:
+    linear-gradient(to right,transparent 0,transparent 58px,rgba(180,50,50,.45) 58px,rgba(180,50,50,.45) 60px,transparent 60px),
+    repeating-linear-gradient(transparent,transparent 31px,rgba(0,0,0,.05) 32px);
+}
+.paper::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 25%,rgba(0,0,0,.05),transparent 20%),
+    radial-gradient(circle at 80% 70%,rgba(80,50,0,.06),transparent 18%);
+  box-shadow:inset 0 0 55px rgba(0,0,0,.30);
+  pointer-events:none;
+}
+.paper::after{
+  content:"";
+  position:absolute;
+  right:0;bottom:0;
+  width:90px;height:90px;
+  background:linear-gradient(135deg,#d5c59d,#f4ebd2);
+  clip-path:polygon(100% 0,100% 100%,0 100%);
+  box-shadow:-5px -5px 10px rgba(0,0,0,.15);
+}
+.holes{
+  position:absolute;
+  left:15px;top:18px;bottom:18px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.holes span{
+  width:18px;height:18px;background:#111;border-radius:50%;
+  box-shadow:inset 0 0 3px rgba(255,255,255,.15);
+}
+.blood{
+  position:absolute;top:80px;right:75px;width:120px;height:120px;border-radius:50%;
+  background:rgba(120,0,0,.15);filter:blur(12px);
+}
+.blood2{
+  position:absolute;bottom:120px;left:220px;width:180px;height:60px;border-radius:50px;
+  background:rgba(100,0,0,.12);filter:blur(10px);transform:rotate(-5deg);
+}
+.wrinkle{
+  position:absolute;bottom:20px;left:40px;width:680px;height:35px;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 18px,rgba(0,0,0,.05) 19px,transparent 20px);
+  opacity:.4;transform:rotate(-1deg);
+}
+h1{font-family:'Cinzel',serif;text-align:center;letter-spacing:2px;margin-bottom:25px;color:#391818}
+.date{font-style:italic;font-size:18px;margin-bottom:25px;color:#5b4a3a}
+.text{font-family:'Caveat',cursive;font-size:34px;line-height:1.65;color:#2f2118}
+.encoded{
+  margin-top:40px;padding:18px;background:#dfcea4;border-left:5px solid #5a1d1d;border-radius:3px;
+  font-family:monospace;font-size:17px;color:#4b0000;letter-spacing:.5px;word-break:break-all;
+}
+.footer{margin-top:40px;font-family:'Caveat',cursive;font-size:30px;text-align:right;color:#451414}
+@media print{
+  body{background:#fff;padding:0;display:block}
+  body::before,.toolbar{display:none!important}
+  .paper{box-shadow:none;transform:none;max-width:100%;margin:0 auto}
+}
+@media (max-width:640px){
+  .paper{padding:40px 28px 48px 72px;transform:none}
+  .text{font-size:26px}
+  .footer{font-size:24px}
+}
+</style>
+</head>
+<body>
+  <div class="toolbar no-capture">
+    <button type="button" id="btnPng">Download diary paper (PNG)</button>
+    <button type="button" id="btnPdf">Download diary paper (PDF)</button>
+    <p class="toolbar__note">Torn page from beneath the rocking chair — keep a copy for your circle.</p>
+  </div>
+
+  <div class="stage">
+    <div class="paper" id="diaryPaper">
+      <div class="holes">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="blood"></div>
+      <div class="blood2"></div>
+      <div class="wrinkle"></div>
+      <h1>Olivia's Diary</h1>
+      <div class="date">October 31, 1898</div>
+      <div class="text">
+        Father says I must never speak of the ritual.<br><br>
+        They believe locking me inside this house will silence me forever.<br><br>
+        If anyone ever finds these pages...<br><br>
+        Know that I am still here.<br><br>
+        My words are no longer written in your language.
+      </div>
+      <div class="encoded">SUdac1lXZDdhR1Z5WDI1aGJXVmZkMkZ6WDI5c2FYWnBZWDA9</div>
+      <div class="footer">
+        If someone finds this diary... my final message is hidden beneath two layers of secrets. Only then will you understand.<br><br>
+        — olivia
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script>
+(function () {
+  const paper = document.getElementById("diaryPaper");
+  const btnPng = document.getElementById("btnPng");
+  const btnPdf = document.getElementById("btnPdf");
+
+  function busy(on) {
+    btnPng.disabled = on;
+    btnPdf.disabled = on;
+    btnPng.textContent = on ? "Preparing paper…" : "Download diary paper (PNG)";
+    btnPdf.textContent = on ? "Preparing paper…" : "Download diary paper (PDF)";
+  }
+
+  async function renderCanvas() {
+    if (typeof html2canvas !== "function") throw new Error("Capture library missing");
+    return html2canvas(paper, {
+      backgroundColor: "#efe2bf",
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      useCORS: true,
+      logging: false,
+    });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  btnPng.addEventListener("click", async () => {
+    busy(true);
+    try {
+      const canvas = await renderCanvas();
+      await new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error("Could not build PNG"));
+          downloadBlob(blob, "olivia-torn-diary-page.png");
+          resolve();
+        }, "image/png");
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Could not download the diary paper as PNG. Try PDF, or print this page.");
+    } finally {
+      busy(false);
+    }
+  });
+
+  btnPdf.addEventListener("click", async () => {
+    busy(true);
+    try {
+      const canvas = await renderCanvas();
+      const img = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        window.print();
+        return;
+      }
+      const pdf = new jsPDF({
+        orientation: canvas.width >= canvas.height ? "landscape" : "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const maxW = pageW - margin * 2;
+      const maxH = pageH - margin * 2;
+      const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
+      const w = canvas.width * ratio;
+      const h = canvas.height * ratio;
+      const x = (pageW - w) / 2;
+      const y = (pageH - h) / 2;
+      pdf.addImage(img, "PNG", x, y, w, h);
+      pdf.save("olivia-torn-diary-page.pdf");
+    } catch (err) {
+      console.error(err);
+      window.print();
+    } finally {
+      busy(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>

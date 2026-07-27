@@ -158,6 +158,23 @@
   border-top: 1px solid var(--border);
 }
 
+.artifact-box {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-top: 1px solid var(--border);
+}
+
+.artifact-box[hidden] {
+  display: none !important;
+}
+
+.artifact-box__note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  opacity: 0.78;
+}
+
 .hint .typewriter-note {
   margin: 0;
   white-space: pre-wrap;

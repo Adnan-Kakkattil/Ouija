@@ -9,7 +9,7 @@
   const SRC = "assets/video/challenge1Prevideo.mp4";
   const POST_SRC = "assets/video/challenge1videopost2.mp4";
   const CHALLENGE_ID = "whisper-1";
-  const ROOM_ONE_URL = "challenges.html";
+  const ROOM_ONE_URL = "challenges.html#room1-1";
 
   function hardenVideo(video) {
     if (!video) return;

@@ -132,6 +132,20 @@
       : "Easy −10 · Medium −20 · Hard −30. Points leave your score when you listen.";
   }
 
+  function paintArtifact(c) {
+    const box = document.getElementById("artifactBox");
+    const link = document.getElementById("artifactLink");
+    if (!box || !link) return;
+    if (!c.artifactUrl) {
+      box.hidden = true;
+      link.removeAttribute("href");
+      return;
+    }
+    box.hidden = false;
+    link.href = c.artifactUrl;
+    link.textContent = c.artifactLabel || "Download the diary paper";
+  }
+
   function openModal(id) {
     const c = challenges.find((x) => x.id === id);
     if (!c) return;
@@ -142,6 +156,7 @@
     document.getElementById("modalMeta").textContent =
       c.points + " pts · " + c.category + " · " + c.difficulty + (c.solved ? " · already claimed" : "");
     document.getElementById("modalDesc").textContent = c.description;
+    paintArtifact(c);
     paintHint(c);
     document.getElementById("flagInput").value = "";
     document.getElementById("flagError").textContent = "";

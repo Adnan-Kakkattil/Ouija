@@ -48,7 +48,7 @@
     <header class="dash__hero">
       <p class="eyebrow" id="trialsEyebrow">Loading trials…</p>
       <h1 class="dash__title">What waits beyond the veil</h1>
-      <p class="lead">Flags take the form <code class="flag-code">ouija{...}</code>. Submit only what the dead give you.</p>
+      <p class="lead">Flags usually take the form <code class="flag-code">ouija{...}</code> — unless a trial leaves another seal.</p>
     </header>
 
     <div class="challenge-filters" id="filters">
@@ -74,6 +74,12 @@
         <p class="muted" id="modalMeta"></p>
       </header>
       <p id="modalDesc"></p>
+      <div class="artifact-box" id="artifactBox" hidden>
+        <a class="btn btn--spectral btn--sm" id="artifactLink" href="#" target="_blank" rel="noopener">
+          Download the diary paper
+        </a>
+        <p class="muted artifact-box__note">Save Olivia’s torn page as PNG or PDF from the paper view.</p>
+      </div>
       <div class="hint" id="hintBox">
         <button class="btn btn--spectral btn--sm" type="button" id="unlockHintBtn">
           Ask for a hint
@@ -84,7 +90,7 @@
       <div class="field" data-field="flag">
         <label class="field__label" for="flagInput"><span>Offer a flag</span></label>
         <div class="field__shell">
-          <input class="field__input" id="flagInput" name="flag" type="text" placeholder="ouija{...}" autocomplete="off" spellcheck="false">
+          <input class="field__input" id="flagInput" name="flag" type="text" placeholder="ouija{...} or flag{...}" autocomplete="off" spellcheck="false">
         </div>
         <p class="field__error" id="flagError" role="alert"></p>
       </div>

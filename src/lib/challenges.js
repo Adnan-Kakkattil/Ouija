@@ -20,6 +20,21 @@ const challenges = [
     correctFlag: "intothevictorianmansion",
   },
   {
+    id: "room1-1",
+    category: "crypto",
+    trial: "Room I · The First Chamber",
+    roman: "I",
+    title: "Torn Diary Page",
+    points: 150,
+    difficulty: "easy",
+    description:
+      "An old diary page is found under a rocking chair. Download Olivia’s paper, read what she left behind, and recover the hidden flag. Caesar Cipher.",
+    hint: "The alphabet has shifted...",
+    correctFlag: "flag{her_name_was_olivia}",
+    artifactUrl: "assets/files/ooo.html",
+    artifactLabel: "Download the diary paper",
+  },
+  {
     id: "whisper-2",
     category: "web",
     trial: "The Whispering Wall",
@@ -131,6 +146,8 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
     /* Hint text only after the medium pays — never for no-hint trials */
     hint: noHint ? null : unlocked ? c.hint : null,
     solved: (solvedIds || []).includes(c.id),
+    artifactUrl: c.artifactUrl || null,
+    artifactLabel: c.artifactLabel || null,
   };
 }
 
