@@ -59,6 +59,25 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   }
 });
 
+router.post("/:id/intro", requireAuth, async (req, res, next) => {
+  try {
+    const room = findRoom(req.params.id);
+    if (!room) return res.status(404).json({ ok: false, message: "That chamber does not answer." });
+
+    const user = await store.publicUser(req.user);
+    if (!isRoomUnlocked(room, user.solved || [])) {
+      return res.status(403).json({ ok: false, message: "That door is still sealed." });
+    }
+
+    await store.markRoomIntroSeen(req.user.id, room.id);
+    await store.setLastRoom(req.user.id, room.id);
+    const fresh = await store.publicUser(await store.findUserById(req.user.id));
+    res.json({ ok: true, roomId: room.id, user: fresh });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/:id/focus", requireAuth, async (req, res, next) => {
   try {
     const room = findRoom(req.params.id);

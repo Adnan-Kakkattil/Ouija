@@ -7,10 +7,11 @@
   let room = null;
   let challenges = [];
   let activeId = null;
+  let currentUser = null;
 
   function roomIdFromLocation() {
     const hash = location.hash.replace("#", "").trim();
-    if (hash) return hash;
+    if (hash.indexOf("room-") === 0) return hash;
     const q = new URLSearchParams(location.search).get("room");
     return q || "room-1";
   }
@@ -18,6 +19,7 @@
   async function boot() {
     const user = await Vault.requireAuth("login.html");
     if (!user) return;
+    currentUser = user;
     document.getElementById("headerChip").textContent =
       (user.teamSigil || "") + " " + user.username + " · " + (user.score || 0) + " pts";
 
@@ -32,12 +34,33 @@
     });
   }
 
+  async function maybePlayRoomIntro(data) {
+    if (!window.RoomGate || !data.room || !data.user) return false;
+    if (!RoomGate.needsIntro(data.user, data.room.id)) return false;
+    if (!RoomGate.INTROS[data.room.id]) return false;
+
+    const grid = document.getElementById("roomChallengeGrid");
+    if (grid) {
+      grid.innerHTML = '<p class="typewriter-note">The downstairs trail opens…</p>';
+    }
+
+    await RoomGate.play({ roomId: data.room.id });
+    try {
+      const marked = await Vault.markRoomIntro(data.room.id);
+      if (marked.user) currentUser = marked.user;
+    } catch (err) {
+      console.warn("[room] intro mark failed", err);
+    }
+    return true;
+  }
+
   async function loadRoom(id) {
     try {
       const data = await Vault.room(id);
       room = data.room;
       challenges = data.challenges || [];
       if (data.user) {
+        currentUser = data.user;
         document.getElementById("headerChip").textContent =
           (data.user.teamSigil || "") +
           " " +
@@ -46,13 +69,14 @@
           (data.user.score || 0) +
           " pts";
       }
+
+      await maybePlayRoomIntro(data);
+
       paintRoom();
       paintChallenges();
 
-      const deep = location.hash.replace("#", "");
-      /* hash is room id; challenge open via query ?c= */
       const challengeId = new URLSearchParams(location.search).get("c");
-      if (challengeId && challenges.some((c) => c.id === challengeId)) {
+      if (challengeId && challenges.some((c) => c.id === challengeId && !c.pending)) {
         openModal(challengeId);
       }
     } catch (err) {
@@ -90,8 +114,19 @@
         : room.action === "restart"
           ? "Restart from first"
           : "Start room";
-    actions.innerHTML = `
-      <button class="btn btn--primary" type="button" data-mode="${
+
+    let nextBtn = "";
+    if (room.complete && room.nextRoomHref) {
+      nextBtn =
+        '<button class="btn btn--primary btn--lg" type="button" id="moveNextRoom">Move to Room ' +
+        room.nextRoomNumber +
+        "</button>";
+    }
+
+    actions.innerHTML =
+      nextBtn +
+      `
+      <button class="btn ${room.complete ? "btn--ghost" : "btn--primary"}" type="button" data-mode="${
         room.action === "restart" ? "restart" : room.action === "continue" ? "continue" : "start"
       }" id="roomPrimary">${startLabel}</button>
       <button class="btn btn--ghost" type="button" data-mode="restart" id="roomRestart">Restart</button>
@@ -100,12 +135,23 @@
     actions.querySelectorAll("[data-mode]").forEach((btn) => {
       btn.addEventListener("click", () => enterRoom(btn.dataset.mode));
     });
+    const move = document.getElementById("moveNextRoom");
+    if (move) {
+      move.addEventListener("click", () => {
+        Vault.go(room.nextRoomHref, { instant: true });
+      });
+    }
   }
 
   async function enterRoom(mode) {
     try {
       const data = await Vault.focusRoom(room.id, mode);
       const focusId = data.focusChallengeId;
+      const focus = challenges.find((c) => c.id === focusId);
+      if (focus && focus.pending) {
+        Atmosphere.toast("That clue is not yet restored.", "error");
+        return;
+      }
       if (focusId) openModal(focusId);
       else Atmosphere.toast("No challenges in this chamber yet.", "error");
     } catch (err) {
@@ -122,16 +168,28 @@
     }
     grid.innerHTML = challenges
       .map((c, i) => {
+        const badge = c.solved
+          ? "Claimed"
+          : c.pending
+            ? "Sealed"
+            : String(i + 1).padStart(2, "0");
+        const badgeClass = c.solved
+          ? "badge--spectre"
+          : c.pending
+            ? "badge--ember"
+            : "badge--brass";
         return `
-      <button type="button" class="card challenge-card ${c.solved ? "is-solved" : ""}" data-open="${c.id}">
+      <button type="button" class="card challenge-card ${c.solved ? "is-solved" : ""} ${
+          c.pending ? "is-pending" : ""
+        }" data-open="${c.id}">
         <div class="challenge-card__top">
-          <span class="badge ${c.solved ? "badge--spectre" : "badge--brass"}">${
-            c.solved ? "Claimed" : String(i + 1).padStart(2, "0")
-          }</span>
+          <span class="badge ${badgeClass}">${badge}</span>
           <span class="challenge-card__points">${c.points}</span>
         </div>
         <h3 class="card__title">${escapeHtml(c.title)}</h3>
-        <p class="card__text">${escapeHtml(c.category)} · ${escapeHtml(c.difficulty)}</p>
+        <p class="card__text">${escapeHtml(c.category)} · ${escapeHtml(c.difficulty)}${
+          c.pending ? " · evidence pending" : ""
+        }</p>
       </button>`;
       })
       .join("");
@@ -211,15 +269,36 @@
     document.getElementById("modalTrial").textContent = c.trial + " · " + c.roman;
     document.getElementById("modalTitle").textContent = c.title;
     document.getElementById("modalMeta").textContent =
-      c.points + " pts · " + c.category + " · " + c.difficulty + (c.solved ? " · claimed" : "");
+      c.points +
+      " pts · " +
+      c.category +
+      " · " +
+      c.difficulty +
+      (c.solved ? " · claimed" : c.pending ? " · evidence pending" : "");
     document.getElementById("modalDesc").textContent = c.description;
     paintArtifact(c);
     paintHint(c);
-    document.getElementById("flagInput").value = "";
-    document.getElementById("flagError").textContent = "";
-    document.querySelector('[data-field="flag"]').classList.remove("has-error");
+
+    const flagField = document.querySelector('[data-field="flag"]');
+    const flagInput = document.getElementById("flagInput");
+    const submitBtn = document.getElementById("submitFlag");
+    const err = document.getElementById("flagError");
+    flagInput.value = "";
+    err.textContent = "";
+    flagField.classList.remove("has-error");
+
+    if (c.pending) {
+      flagInput.disabled = true;
+      submitBtn.disabled = true;
+      err.textContent = "This clue is catalogued, but the evidence is not yet restored.";
+      if (document.getElementById("hintBox")) document.getElementById("hintBox").hidden = true;
+    } else {
+      flagInput.disabled = !!c.solved;
+      submitBtn.disabled = !!c.solved;
+    }
+
     document.getElementById("challengeModal").showModal();
-    Vault.focusChallenge(id).catch(() => {});
+    if (!c.pending) Vault.focusChallenge(id).catch(() => {});
   }
 
   async function unlockHint() {

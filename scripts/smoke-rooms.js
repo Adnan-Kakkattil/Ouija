@@ -97,8 +97,28 @@ function assert(cond, msg) {
 
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
   assert(rooms[0].complete === true, "room1 cleared");
+  assert(rooms[0].nextRoomId === "room-2", "room1 points to room2");
   assert(rooms[0].action === "restart", "room1 restart action");
-  assert(rooms[1].unlocked === false, "room2 still sealed (no challenges)");
+  assert(rooms[1].unlocked === true, "room2 unlocked after room1");
+  assert(rooms[1].totalChallenges === 5, "room2 has 5 challenges");
+
+  const r2 = await req("GET", "/api/rooms/room-2", null, ck);
+  assert(r2.status === 200, "room2 open");
+  const r2body = JSON.parse(r2.body);
+  assert(r2body.challenges.length === 5, "room2 lists 5");
+  assert(r2body.challenges.every((c) => c.points === 200), "room2 200 pts");
+
+  const intro = await req("POST", "/api/rooms/room-2/intro", {}, ck);
+  assert(intro.status === 200, "room2 intro marked");
+  assert(JSON.parse(intro.body).user.roomIntrosSeen.indexOf("room-2") !== -1, "intro persisted");
+
+  const pending = await req(
+    "POST",
+    "/api/challenges/room2-1/submit",
+    { flag: "flag{room2_pending_newspaper}" },
+    ck
+  );
+  assert(pending.status === 403, "pending room2 challenge blocked");
 
   const pages = ["/", "/dashboard.html", "/room.html", "/challenges.html"];
   for (const p of pages) {

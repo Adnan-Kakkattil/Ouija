@@ -71,6 +71,18 @@ const store = {
     return this.findUserById(userId);
   },
 
+  async markRoomIntroSeen(userId, roomId) {
+    if (!userId || !roomId) return null;
+    await users().updateOne(
+      { id: userId },
+      {
+        $addToSet: { roomIntrosSeen: roomId },
+        $set: { ["roomIntroAt." + roomId]: Date.now() },
+      }
+    );
+    return this.findUserById(userId);
+  },
+
   async listUsers() {
     return users().find({}, { projection: { _id: 0 } }).toArray();
   },
@@ -500,6 +512,7 @@ const store = {
       lastRoomAt: user.lastRoomAt || null,
       storySeen: !!user.storySeenAt,
       storySeenAt: user.storySeenAt || null,
+      roomIntrosSeen: Array.isArray(user.roomIntrosSeen) ? user.roomIntrosSeen : [],
       resumePath: this.resumePath(user),
       teamProgress: teamProg
         ? {

@@ -130,6 +130,12 @@ router.post("/:id/submit", requireAuth, async (req, res, next) => {
   try {
     const c = findChallenge(req.params.id);
     if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+    if (c.pending) {
+      return res.status(403).json({
+        ok: false,
+        message: "This clue is not yet restored. Return when the house yields the evidence.",
+      });
+    }
 
     const flag = String(req.body.flag || "").trim();
     if (!flag) return res.status(400).json({ ok: false, message: "Offer a flag." });

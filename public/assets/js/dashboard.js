@@ -129,6 +129,7 @@
   }
 
   function actionLabel(room) {
+    if (room.complete && room.nextRoomHref) return "Move to Room " + room.nextRoomNumber;
     if (room.action === "start") return "Start room";
     if (room.action === "continue") return "Continue";
     if (room.action === "restart") return "Enter again";
@@ -182,16 +183,19 @@
         if (locked) {
           return `<article class="room-card is-locked" aria-disabled="true">${body}</article>`;
         }
+        const href =
+          r.complete && r.nextRoomHref ? r.nextRoomHref : r.href;
         return `<a class="room-card ${r.status === "cleared" ? "is-cleared" : ""} ${
           r.isCurrent ? "is-current" : ""
-        }" href="${escapeHtml(r.href)}">${body}</a>`;
+        }" href="${escapeHtml(href)}">${body}</a>`;
       })
       .join("");
 
     const focus =
-      rooms.find((r) => r.isCurrent && r.unlocked && !r.sealed) ||
       rooms.find((r) => r.unlocked && r.status === "in_progress") ||
       rooms.find((r) => r.unlocked && r.status === "open") ||
+      rooms.find((r) => r.complete && r.nextRoomHref) ||
+      rooms.find((r) => r.isCurrent && r.unlocked && !r.sealed) ||
       rooms.find((r) => r.unlocked && !r.sealed) ||
       null;
 
@@ -203,6 +207,14 @@
       nextDesc.textContent = "Offer the first key, or wait for the house to open deeper chambers.";
       nextLink.href = "dashboard.html";
       nextLink.textContent = "Stay at the table";
+      return;
+    }
+    if (focus.complete && focus.nextRoomHref) {
+      nextTitle.textContent =
+        "Room " + focus.nextRoomNumber + " · " + (focus.nextRoomTitle || "Next chamber");
+      nextDesc.textContent = "Room " + focus.number + " is cleared. The trail leads downstairs.";
+      nextLink.href = focus.nextRoomHref;
+      nextLink.textContent = "Move to Room " + focus.nextRoomNumber;
       return;
     }
     nextTitle.textContent = "Room " + focus.number + " · " + focus.title;

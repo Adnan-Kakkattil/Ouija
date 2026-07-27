@@ -189,6 +189,15 @@
       return data;
     },
 
+    async markRoomIntro(id) {
+      const data = await api("/api/rooms/" + encodeURIComponent(id) + "/intro", {
+        method: "POST",
+        body: {},
+      });
+      if (data.user) cachedUser = data.user;
+      return data;
+    },
+
     async submitFlag(id, flag) {
       return api("/api/challenges/" + encodeURIComponent(id) + "/submit", {
         method: "POST",

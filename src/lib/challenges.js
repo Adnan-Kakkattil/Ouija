@@ -29,11 +29,10 @@ const rooms = [
   {
     id: "room-2",
     number: 2,
-    title: "The Second Chamber",
-    lede: "Deeper into the house. The air grows colder.",
+    title: "Olivia's Investigation Room",
+    lede: "A forced door downstairs. Red string, clippings, and Olivia's last case — unfinished.",
     pointsPerChallenge: 200,
-    challengeIds: [],
-    sealed: true,
+    challengeIds: ["room2-1", "room2-2", "room2-3", "room2-4", "room2-5"],
   },
   {
     id: "room-3",
@@ -190,6 +189,81 @@ const challenges = [
     artifactLabel: "Download the ritual paper",
   },
   {
+    id: "room2-1",
+    roomId: "room-2",
+    category: "forensics",
+    trial: "Room II · Investigation Room",
+    roman: "II",
+    title: "Torn Newspaper",
+    points: 200,
+    difficulty: "easy",
+    pending: true,
+    description:
+      "A torn newspaper article about the mansion's mysterious disappearances. Evidence for this clue is still being recovered from the desk.",
+    hint: "Evidence for this clue arrives soon.",
+    correctFlag: "flag{room2_pending_newspaper}",
+  },
+  {
+    id: "room2-2",
+    roomId: "room-2",
+    category: "crypto",
+    trial: "Room II · Investigation Room",
+    roman: "II",
+    title: "Encrypted Journal",
+    points: 200,
+    difficulty: "medium",
+    pending: true,
+    description:
+      "Olivia's encrypted investigation journal lies among the red string and photographs. The cipher is not yet readable to the circle.",
+    hint: "Evidence for this clue arrives soon.",
+    correctFlag: "flag{room2_pending_journal}",
+  },
+  {
+    id: "room2-3",
+    roomId: "room-2",
+    category: "forensics",
+    trial: "Room II · Investigation Room",
+    roman: "II",
+    title: "Damaged Camera",
+    points: 200,
+    difficulty: "medium",
+    pending: true,
+    description:
+      "A shattered camera on the floor still holds one surviving photograph. Recover what remains on the plate.",
+    hint: "Evidence for this clue arrives soon.",
+    correctFlag: "flag{room2_pending_camera}",
+  },
+  {
+    id: "room2-4",
+    roomId: "room-2",
+    category: "forensics",
+    trial: "Room II · Investigation Room",
+    roman: "II",
+    title: "Final Recording",
+    points: 200,
+    difficulty: "medium",
+    pending: true,
+    description:
+      "A voice recorder beside the overturned chair. Olivia's final audio recording waits to be recovered.",
+    hint: "Evidence for this clue arrives soon.",
+    correctFlag: "flag{room2_pending_audio}",
+  },
+  {
+    id: "room2-5",
+    roomId: "room-2",
+    category: "web",
+    trial: "Room II · Investigation Room",
+    roman: "II",
+    title: "Restricted Case Files",
+    points: 200,
+    difficulty: "hard",
+    pending: true,
+    description:
+      "Olivia's laptop still holds an old investigation website with restricted case files. The drive is damaged — the site is not yet restored.",
+    hint: "Evidence for this clue arrives soon.",
+    correctFlag: "flag{room2_pending_website}",
+  },
+  {
     id: "whisper-2",
     category: "web",
     trial: "The Whispering Wall",
@@ -339,6 +413,7 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
     solved: (solvedIds || []).includes(c.id),
     artifactUrl: c.artifactUrl || null,
     artifactLabel: c.artifactLabel || null,
+    pending: !!c.pending,
   };
 }
 
@@ -372,7 +447,7 @@ function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
     action = "start";
   }
 
-  return {
+  const out = {
     id: room.id,
     number: room.number,
     title: room.title,
@@ -391,7 +466,23 @@ function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
     nextChallengeId: firstUnsolved ? firstUnsolved.id : list[0] ? list[0].id : null,
     resumeChallengeId: resume && !solved.has(resume) ? resume : firstUnsolved ? firstUnsolved.id : null,
     href: "room.html#" + room.id,
+    nextRoomId: null,
+    nextRoomHref: null,
+    nextRoomTitle: null,
+    nextRoomNumber: null,
   };
+
+  if (complete) {
+    const nextRoom = rooms.find((r) => r.number === room.number + 1);
+    if (nextRoom && isRoomUnlocked(nextRoom, solvedIds)) {
+      out.nextRoomId = nextRoom.id;
+      out.nextRoomHref = "room.html#" + nextRoom.id;
+      out.nextRoomTitle = nextRoom.title;
+      out.nextRoomNumber = nextRoom.number;
+    }
+  }
+
+  return out;
 }
 
 function roomsForUser(solvedIds, lastChallengeId, lastRoomId) {
