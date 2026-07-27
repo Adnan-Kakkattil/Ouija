@@ -159,7 +159,11 @@
       link.removeAttribute("download");
     }
     if (note) {
-      note.textContent = "Save a copy of the evidence for your circle.";
+      if (c.id === "room1-5") {
+        note.textContent = "Crack the MD5 clasp, then unlock this ZIP with the recovered word.";
+      } else {
+        note.textContent = "Save a copy of the evidence for your circle.";
+      }
     }
   }
 

@@ -15,7 +15,7 @@ const rooms = [
     title: "The First Chamber",
     lede: "Dust, moonlight, and eight objects that remember Olivia.",
     pointsPerChallenge: 100,
-    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4"],
+    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4", "room1-5"],
   },
   {
     id: "room-2",
@@ -115,6 +115,22 @@ const challenges = [
     correctFlag: "flag{mother_left_me}",
     artifactUrl: "assets/files/family.png",
     artifactLabel: "Download the family portrait",
+  },
+  {
+    id: "room1-5",
+    roomId: "room-1",
+    category: "crypto",
+    trial: "Room I · The First Chamber",
+    roman: "I",
+    title: "Ghost's Journal",
+    points: 100,
+    difficulty: "easy",
+    description:
+      "A journal on the nightstand is sealed with an old clasp. The lock is not a word you can read — only this MD5 digest: `158cbad378bdf31d6ec670161a7b6fbf`. Crack the hash, open the archive, and read what the ghost wrote.",
+    hint: "MD5 of a short English word. A common wordlist will do.",
+    correctFlag: "flag{the_ghost_is_trapped}",
+    artifactUrl: "assets/files/ghost-journal.zip",
+    artifactLabel: "Download the sealed journal",
   },
   {
     id: "whisper-2",

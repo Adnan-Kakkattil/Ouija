@@ -151,7 +151,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room1-4") {
+      if (c.id === "room1-5") {
+        note.textContent = "Crack the MD5 clasp, then unlock this ZIP with the recovered word.";
+      } else if (c.id === "room1-4") {
         note.textContent = "Download the crooked portrait. Hidden text lies inside the image.";
       } else if (c.id === "room1-3") {
         note.textContent = "Download the ZIP sealed inside the wooden box. Crack its password.";
