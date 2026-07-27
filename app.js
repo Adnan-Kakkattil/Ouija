@@ -110,8 +110,9 @@ function mountApp(sessionStore) {
     const payload = {
       ok: true,
       service: "ouija-ctf",
-      build: "rooms-v2",
+      build: "rooms-v3",
       rooms: true,
+      investigation: true,
       hostinger: isHostinger() || IS_PROD,
       port: PORT,
       host: HOST,
@@ -135,6 +136,7 @@ function mountApp(sessionStore) {
   app.use("/api/auth", auth.router);
   app.use("/api/challenges", challenges);
   app.use("/api/rooms", rooms);
+  app.use("/api/investigation", require("./src/routes/investigation"));
 
   app.use(
     express.static(PUBLIC_DIR, {

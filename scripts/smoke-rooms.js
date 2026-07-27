@@ -112,20 +112,22 @@ function assert(cond, msg) {
   assert(intro.status === 200, "room2 intro marked");
   assert(JSON.parse(intro.body).user.roomIntrosSeen.indexOf("room-2") !== -1, "intro persisted");
 
-  const pending = await req(
-    "POST",
-    "/api/challenges/room2-5/submit",
-    { flag: "flag{room2_pending_website}" },
-    ck
-  );
-  assert(pending.status === 403, "pending room2 challenge blocked");
-
   await req("POST", "/api/challenges/room2-1/submit", { flag: "ouija{olivia_investigated}" }, ck);
   await req("POST", "/api/challenges/room2-2/submit", { flag: "flag{she_found_evidence}" }, ck);
   await req("POST", "/api/challenges/room2-3/submit", { flag: "ouija{truth_lies_below}" }, ck);
   await req("POST", "/api/challenges/room2-4/submit", { flag: "flag{footsteps_at_midnight}" }, ck);
+  await req("POST", "/api/challenges/room2-5/submit", { flag: "flag{murder_not_accident}" }, ck);
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
-  assert(rooms[1].solvedChallenges === 4, "room2 has four solves");
+  assert(rooms[1].solvedChallenges === 5, "room2 has five solves");
+  assert(rooms[1].complete === true, "room2 cleared");
+
+  const idorList = await req("GET", "/api/investigation/reports");
+  assert(idorList.status === 200, "investigation list");
+  const listed = JSON.parse(idorList.body).reports || [];
+  assert(listed.every((r) => r.id !== 7), "restricted id hidden from index");
+  const idorHit = await req("GET", "/api/investigation/reports/7");
+  assert(idorHit.status === 200, "idor fetch 7");
+  assert(JSON.parse(idorHit.body).report.body.indexOf("flag{murder_not_accident}") !== -1, "idor flag body");
 
   const pages = ["/", "/dashboard.html", "/room.html", "/challenges.html"];
   for (const p of pages) {

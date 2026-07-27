@@ -260,12 +260,13 @@ const challenges = [
     roman: "II",
     title: "Restricted Case Files",
     points: 200,
-    difficulty: "hard",
-    pending: true,
+    difficulty: "medium",
     description:
-      "Olivia's laptop still holds an old investigation website with restricted case files. The drive is damaged — the site is not yet restored.",
-    hint: "Evidence for this clue arrives soon.",
-    correctFlag: "flag{room2_pending_website}",
+      "Olivia copied her notes to a small local investigation portal before she disappeared. The homepage only shows harmless public entries — the sensitive reports were never meant to be public. Open the desk and find what was withheld.",
+    hint: "Not every record belongs only to you.",
+    correctFlag: "flag{murder_not_accident}",
+    artifactUrl: "assets/files/olivia-portal/index.html",
+    artifactLabel: "Open the investigation portal",
   },
   {
     id: "whisper-2",

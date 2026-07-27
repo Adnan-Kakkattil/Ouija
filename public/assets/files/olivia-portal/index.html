@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hollow Road Investigation Desk</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141210;
+  --panel:#1e1a16;
+  --ink:#e8e0d4;
+  --muted:#9a8f80;
+  --line:rgba(232,224,212,.14);
+  --accent:#c4a574;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(ellipse at top,#242018 0%,var(--bg) 55%);
+  color:var(--ink);
+  font-family:"Source Serif 4", Georgia, serif;
+  min-height:100vh;
+  padding:2rem 1.25rem 3rem;
+}
+.wrap{max-width:44rem;margin:0 auto}
+.brand{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.5rem;
+}
+h1{font-size:clamp(1.5rem,4vw,2rem);margin-bottom:.35rem}
+.lede{color:var(--muted);margin-bottom:1.5rem;line-height:1.5}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:1.1rem 1.15rem;
+  margin-bottom:1rem;
+}
+.panel h2{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.75rem;
+}
+.list{list-style:none;display:grid;gap:.65rem}
+.list button{
+  width:100%;text-align:left;cursor:pointer;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:.85rem .9rem;
+  font:inherit;
+}
+.list button:hover{border-color:var(--accent)}
+.list strong{display:block;margin-bottom:.2rem}
+.list span{color:var(--muted);font-size:.9rem}
+.meta{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.7rem;color:var(--muted);margin-top:1rem;
+}
+#viewer[hidden]{display:none !important}
+#viewer h3{margin-bottom:.35rem}
+#viewer .class{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.75rem;
+}
+#viewer pre{
+  white-space:pre-wrap;font-family:inherit;line-height:1.55;
+  color:#f0e8da;
+}
+.err{color:#e8a090;font-family:"IBM Plex Mono", monospace;font-size:.8rem}
+.idor-hint{
+  margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--line);
+  font-size:.85rem;color:var(--muted);
+}
+code{font-family:"IBM Plex Mono", monospace;font-size:.8em;color:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="brand">Local copy · Olivia H. workstation</p>
+    <h1>Hollow Road Investigation Desk</h1>
+    <p class="lede">
+      Public board entries only. Restricted case files are stored under separate record numbers
+      and are not listed here.
+    </p>
+
+    <section class="panel">
+      <h2>Public records</h2>
+      <ul class="list" id="reportList">
+        <li class="err">Loading desk index…</li>
+      </ul>
+      <p class="meta" id="listMeta"></p>
+    </section>
+
+    <section class="panel" id="viewer" hidden>
+      <h2>Record viewer</h2>
+      <p class="class" id="viewClass"></p>
+      <h3 id="viewTitle"></h3>
+      <pre id="viewBody"></pre>
+      <p class="idor-hint">
+        Direct reference: <code>/api/investigation/reports/&lt;id&gt;</code>
+      </p>
+    </section>
+  </div>
+
+<script>
+(function () {
+  var listEl = document.getElementById("reportList");
+  var metaEl = document.getElementById("listMeta");
+  var viewer = document.getElementById("viewer");
+
+  function loadList() {
+    fetch("/api/investigation/reports", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var rows = data.reports || [];
+        if (!rows.length) {
+          listEl.innerHTML = '<li class="err">No public records.</li>';
+          return;
+        }
+        listEl.innerHTML = rows.map(function (r) {
+          return '<li><button type="button" data-id="' + r.id + '">' +
+            "<strong>#" + r.id + " · " + escapeHtml(r.title) + "</strong>" +
+            "<span>" + escapeHtml(r.summary) + "</span></button></li>";
+        }).join("");
+        metaEl.textContent = (data.note || "") + " · " + rows.length + " visible";
+        listEl.querySelectorAll("[data-id]").forEach(function (btn) {
+          btn.addEventListener("click", function () { openReport(btn.getAttribute("data-id")); });
+        });
+      })
+      .catch(function () {
+        listEl.innerHTML = '<li class="err">Desk offline — is the mansion server running?</li>';
+      });
+  }
+
+  function openReport(id) {
+    fetch("/api/investigation/reports/" + encodeURIComponent(id), { credentials: "same-origin" })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          viewer.hidden = false;
+          document.getElementById("viewClass").textContent = "missing";
+          document.getElementById("viewTitle").textContent = "No record";
+          document.getElementById("viewBody").textContent = (res.d && res.d.message) || "Not found.";
+          return;
+        }
+        var report = res.d.report;
+        viewer.hidden = false;
+        document.getElementById("viewClass").textContent = report.classification || "record";
+        document.getElementById("viewTitle").textContent = "#" + report.id + " · " + report.title;
+        document.getElementById("viewBody").textContent = report.body;
+      });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  /* Support deep links: olivia-portal/index.html?id=7 */
+  var q = new URLSearchParams(location.search).get("id");
+  loadList();
+  if (q) openReport(q);
+})();
+</script>
+</body>
+</html>
