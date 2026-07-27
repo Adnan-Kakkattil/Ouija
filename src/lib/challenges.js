@@ -245,11 +245,12 @@ const challenges = [
     title: "Final Recording",
     points: 200,
     difficulty: "medium",
-    pending: true,
     description:
-      "A voice recorder beside the overturned chair. Olivia's final audio recording waits to be recovered.",
-    hint: "Evidence for this clue arrives soon.",
-    correctFlag: "flag{room2_pending_audio}",
+      "Olivia's damaged voice recorder still works. Download the WAV — hidden within the audio is a secret message she left for anyone who might investigate after her.",
+    hint: "The file is more than sound. Something else is packed inside the recording.",
+    correctFlag: "flag{footsteps_at_midnight}",
+    artifactUrl: "assets/files/olivia-recorder.wav",
+    artifactLabel: "Download the voice recording",
   },
   {
     id: "room2-5",

@@ -151,7 +151,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room2-3") {
+      if (c.id === "room2-4") {
+        note.textContent = "Download the WAV. Carve or binwalk — a file is appended after the audio.";
+      } else if (c.id === "room2-3") {
         note.textContent = "Unlock the ZIP with clues from Room 2 challenges 1 and 2.";
       } else if (c.id === "room2-2") {
         note.textContent = "Download the notebook page. A small Caesar shift unlocks her words.";
