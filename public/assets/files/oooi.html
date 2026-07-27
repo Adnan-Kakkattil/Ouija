@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Prayer Room — Hidden Prayer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:radial-gradient(circle at top,#2d2d2d 0%,#111 55%,#000 100%);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-family:serif;
+  padding:1.5rem 1rem 2rem;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 40%,rgba(255,255,255,.04),transparent 35%),
+    radial-gradient(circle at 80% 60%,rgba(255,255,255,.03),transparent 40%),
+    radial-gradient(circle at 50% 20%,rgba(255,255,255,.02),transparent 30%);
+  animation:fog 20s linear infinite;
+  pointer-events:none;
+}
+@keyframes fog{
+  0%{transform:translateX(-40px)}
+  50%{transform:translateX(40px)}
+  100%{transform:translateX(-40px)}
+}
+.toolbar{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:.65rem;
+  justify-content:center;
+  margin-bottom:1.25rem;
+  max-width:900px;
+  width:100%;
+}
+.toolbar button{
+  appearance:none;
+  border:1px solid rgba(244,236,216,.35);
+  background:rgba(8,6,12,.72);
+  color:#f4ecd8;
+  font-family:"Cinzel",serif;
+  font-size:.78rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  padding:.7rem 1.1rem;
+  cursor:pointer;
+}
+.toolbar button:hover,
+.toolbar button:focus-visible{
+  border-color:rgba(217,169,74,.7);
+  color:#eec97a;
+  outline:none;
+}
+.toolbar button:disabled{opacity:.55;cursor:wait}
+.toolbar__note{
+  width:100%;
+  text-align:center;
+  color:rgba(196,179,148,.75);
+  font-size:.85rem;
+}
+.stage{position:relative;z-index:1;width:100%;display:flex;justify-content:center}
+.wall{
+  width:900px;
+  max-width:95%;
+  background:#56514b;
+  padding:55px;
+  border-radius:6px;
+  position:relative;
+  box-shadow:0 0 80px black,inset 0 0 80px rgba(0,0,0,.55);
+  overflow:hidden;
+}
+.wall::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(90deg,transparent 0,transparent 95px,rgba(0,0,0,.18) 96px,rgba(0,0,0,.18) 98px),
+    repeating-linear-gradient(transparent 0,transparent 55px,rgba(0,0,0,.18) 56px,rgba(0,0,0,.18) 58px);
+  opacity:.35;
+  pointer-events:none;
+}
+.cross{
+  position:relative;
+  font-size:90px;
+  text-align:center;
+  margin-bottom:20px;
+  color:#2d1c12;
+  transform:rotate(180deg);
+  text-shadow:0 0 15px rgba(0,0,0,.8);
+}
+.prayer{
+  position:relative;
+  background:rgba(0,0,0,.35);
+  border:2px solid rgba(255,255,255,.08);
+  padding:35px;
+  border-radius:6px;
+}
+.prayer h2{
+  font-family:'Cinzel',serif;
+  text-align:center;
+  margin-bottom:25px;
+  letter-spacing:2px;
+  color:#d8c39b;
+}
+.rot13{
+  font-family:monospace;
+  font-size:22px;
+  line-height:2;
+  color:#e4d6b8;
+  text-align:center;
+  letter-spacing:1px;
+}
+.blood{
+  position:absolute;
+  width:140px;height:140px;
+  right:70px;top:80px;
+  background:rgba(120,0,0,.22);
+  border-radius:50%;
+  filter:blur(12px);
+}
+.crack{
+  position:absolute;
+  left:40px;top:120px;
+  width:2px;height:300px;
+  background:#1d1d1d;
+  transform:rotate(15deg);
+  box-shadow:30px 80px #1d1d1d,50px 140px #1d1d1d,80px 200px #1d1d1d;
+  opacity:.6;
+}
+.wall-hint{
+  margin-top:25px;
+  font-family:'Caveat',cursive;
+  font-size:28px;
+  text-align:center;
+  color:#cbb79d;
+  font-style:italic;
+}
+@media (max-width:700px){
+  .wall{padding:28px 18px}
+  .rot13{font-size:16px;line-height:1.7}
+  .cross{font-size:64px}
+}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="btnPng">Download the prayer wall (PNG)</button>
+    <p class="toolbar__note">Strange symbols on the chamber wall — keep a copy for your circle.</p>
+  </div>
+
+  <div class="stage">
+    <div class="wall" id="prayerWall">
+      <div class="blood"></div>
+      <div class="crack"></div>
+      <div class="cross">✝</div>
+      <div class="prayer">
+        <h2>The Prayer</h2>
+        <div class="rot13">
+          Znl gur yvtug thvqr zr.<br><br>
+          V unir orra sbetbggra ol rirelbar.<br><br>
+          Vs lbh pna ernq guvf,<br>
+          lbh ner bar fgrc pybfre gb svaqvat zr.<br>
+          synt{fur_srnerq_gur_onfrzrag}
+        </div>
+        <div class="wall-hint">"Sometimes the answer isn't hidden... only rotated."</div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(function () {
+  const wall = document.getElementById("prayerWall");
+  const btnPng = document.getElementById("btnPng");
+
+  function busy(on) {
+    btnPng.disabled = on;
+    btnPng.textContent = on ? "Preparing wall…" : "Download the prayer wall (PNG)";
+  }
+
+  btnPng.addEventListener("click", async () => {
+    busy(true);
+    try {
+      if (typeof html2canvas !== "function") throw new Error("Capture library missing");
+      const canvas = await html2canvas(wall, {
+        backgroundColor: "#56514b",
+        scale: Math.min(2, window.devicePixelRatio || 1.5),
+        useCORS: true,
+        logging: false,
+      });
+      await new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error("Could not build PNG"));
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "olivia-hidden-prayer-wall.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          resolve();
+        }, "image/png");
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Could not download the prayer wall as PNG.");
+    } finally {
+      busy(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -135,6 +135,7 @@
   function paintArtifact(c) {
     const box = document.getElementById("artifactBox");
     const link = document.getElementById("artifactLink");
+    const note = document.getElementById("artifactNote");
     if (!box || !link) return;
     if (!c.artifactUrl) {
       box.hidden = true;
@@ -143,7 +144,23 @@
     }
     box.hidden = false;
     link.href = c.artifactUrl;
-    link.textContent = c.artifactLabel || "Download the diary paper";
+    link.textContent = c.artifactLabel || "Download evidence";
+    if (/\.zip$/i.test(c.artifactUrl)) {
+      link.setAttribute("download", c.artifactUrl.split("/").pop());
+    } else {
+      link.removeAttribute("download");
+    }
+    if (note) {
+      if (c.id === "room1-3") {
+        note.textContent = "Download the ZIP sealed inside the wooden box. Crack its password.";
+      } else if (c.id === "room1-2") {
+        note.textContent = "Open the wall and download the prayer as PNG.";
+      } else if (c.id === "room1-1") {
+        note.textContent = "Save Olivia’s torn page as PNG or PDF from the paper view.";
+      } else {
+        note.textContent = "Save a copy of the evidence for your circle.";
+      }
+    }
   }
 
   function openModal(id) {
