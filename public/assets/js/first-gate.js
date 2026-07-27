@@ -11,6 +11,34 @@
   const CHALLENGE_ID = "whisper-1";
   const ROOM_ONE_URL = "challenges.html";
 
+  function hardenVideo(video) {
+    if (!video) return;
+    video.controls = false;
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
+    video.setAttribute("disablepictureinpicture", "");
+    video.setAttribute("disableremoteplayback", "");
+    video.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    try {
+      video.removeAttribute("controls");
+    } catch (_) {
+      /* ignore */
+    }
+    if (!video.dataset.pipBlocked) {
+      video.dataset.pipBlocked = "1";
+      video.addEventListener("enterpictureinpicture", async (e) => {
+        e.preventDefault();
+        try {
+          if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        } catch (_) {
+          /* ignore */
+        }
+      });
+    }
+  }
+
   function requestDomFullscreen(el) {
     const target = el || document.documentElement;
     const req =
@@ -45,7 +73,9 @@
     root.setAttribute("aria-modal", "true");
     root.setAttribute("aria-label", "Challenge I — Burned Paper");
     root.innerHTML = `
-      <video class="gate__video" id="gateVideo" playsinline preload="auto"></video>
+      <video class="gate__video" id="gateVideo" playsinline webkit-playsinline
+             preload="auto" disablepictureinpicture disableremoteplayback
+             controlslist="nodownload nofullscreen noremoteplayback"></video>
       <div class="gate__veil" id="gateVeil">
         <p class="eyebrow">Trial I · The game begins</p>
         <h2 class="gate__title">The burned leaf</h2>
@@ -126,6 +156,7 @@
       </div>
     `;
     const video = root.querySelector("#gateVideo");
+    hardenVideo(video);
     const source = document.createElement("source");
     source.src = SRC;
     source.type = "video/mp4";
@@ -227,6 +258,7 @@
       }
 
       async function startPlayback() {
+        hardenVideo(video);
         video.muted = false;
         video.volume = 1;
         video.controls = false;
@@ -262,6 +294,7 @@
         }
         video.muted = false;
         video.volume = 1;
+        hardenVideo(video);
         video.controls = false;
         video.currentTime = 0;
         showPlaying();

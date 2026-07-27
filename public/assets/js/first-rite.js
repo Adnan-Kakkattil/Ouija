@@ -10,6 +10,34 @@
   const SEEN_KEY = "ouija:firstRiteSeen";
   const ARM_KEY = "ouija:playFirstRite";
 
+  function hardenVideo(video) {
+    if (!video) return;
+    video.controls = false;
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
+    video.setAttribute("disablepictureinpicture", "");
+    video.setAttribute("disableremoteplayback", "");
+    video.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    try {
+      video.removeAttribute("controls");
+    } catch (_) {
+      /* ignore */
+    }
+    if (!video.dataset.pipBlocked) {
+      video.dataset.pipBlocked = "1";
+      video.addEventListener("enterpictureinpicture", async (e) => {
+        e.preventDefault();
+        try {
+          if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        } catch (_) {
+          /* ignore */
+        }
+      });
+    }
+  }
+
   function buildOverlay() {
     const root = document.createElement("div");
     root.className = "rite";
@@ -18,7 +46,9 @@
     root.setAttribute("aria-modal", "true");
     root.setAttribute("aria-label", "The Story — OUIJA CTF");
     root.innerHTML = `
-      <video class="rite__video" id="riteVideo" playsinline preload="auto"></video>
+      <video class="rite__video" id="riteVideo" playsinline webkit-playsinline
+             preload="auto" disablepictureinpicture disableremoteplayback
+             controlslist="nodownload nofullscreen noremoteplayback"></video>
       <div class="rite__veil" id="riteVeil">
         <p class="eyebrow">Prologue · The Story</p>
         <h2 class="rite__title">How this house woke</h2>
@@ -44,6 +74,7 @@
       </div>
     `;
     const video = root.querySelector("#riteVideo");
+    hardenVideo(video);
     const source = document.createElement("source");
     source.src = SRC;
     source.type = "video/mp4";
@@ -178,6 +209,7 @@
       }
 
       async function startPlayback() {
+        hardenVideo(video);
         video.muted = false;
         video.volume = 1;
         video.controls = false;

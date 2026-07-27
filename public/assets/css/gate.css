@@ -34,6 +34,18 @@
   cursor: pointer;
 }
 
+/* Kill Chromium native media chrome (PiP / captions / translate) */
+.gate__video::-webkit-media-controls,
+.gate__video::-webkit-media-controls-enclosure,
+.gate__video::-webkit-media-controls-panel,
+.gate__video::-webkit-media-controls-overlay-enclosure,
+.gate__video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .gate.is-playing .gate__video {
   object-fit: cover;
 }
