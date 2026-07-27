@@ -16,7 +16,7 @@
 
     paintHeader(user);
 
-    challenges = await Vault.challenges();
+    challenges = (await Vault.challenges()).filter((c) => !c.roomId);
     const solved = challenges.filter((c) => c.solved).length;
     const eyebrow = document.getElementById("trialsEyebrow");
     if (eyebrow) {
@@ -206,7 +206,7 @@
         );
       }
 
-      challenges = await Vault.challenges();
+      challenges = (await Vault.challenges()).filter((c) => !c.roomId);
       const user = data.user || (await Vault.currentUser(true));
       if (user) paintHeader(user);
 
@@ -241,7 +241,7 @@
     try {
       const data = await Vault.submitFlag(activeId, flag);
       Atmosphere.toast(data.message || "Accepted.", "success");
-      challenges = await Vault.challenges();
+      challenges = (await Vault.challenges()).filter((c) => !c.roomId);
       const user = data.user || (await Vault.currentUser(true));
       if (user) {
         lastChallengeId = user.lastChallengeId || activeId;

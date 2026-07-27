@@ -115,10 +115,7 @@
         const pct = r.totalChallenges
           ? Math.round((r.solvedChallenges / r.totalChallenges) * 100)
           : 0;
-        return `
-        <article class="room-card ${locked ? "is-locked" : ""} ${r.status === "cleared" ? "is-cleared" : ""} ${
-          r.isCurrent ? "is-current" : ""
-        }" data-room="${escapeHtml(r.id)}">
+        const body = `
           <div class="room-card__top">
             <span class="badge ${
               locked
@@ -136,15 +133,23 @@
             <span style="width:${pct}%"></span>
           </div>
           <p class="room-card__meta">
-            ${r.sealed ? "Awaiting the house" : r.solvedChallenges + " / " + r.totalChallenges + " challenges"}
+            ${
+              r.sealed
+                ? "Awaiting the house"
+                : r.solvedChallenges + " / " + r.totalChallenges + " challenges"
+            }
             · ${r.earnedPoints} / ${r.totalPoints} pts
           </p>
-          ${
-            locked
-              ? `<button class="btn btn--ghost btn--block" type="button" disabled>${actionLabel(r)}</button>`
-              : `<a class="btn btn--primary btn--block" href="${escapeHtml(r.href)}">${actionLabel(r)}</a>`
-          }
-        </article>`;
+          <span class="btn ${locked ? "btn--ghost" : "btn--primary"} btn--block room-card__cta">${actionLabel(
+            r
+          )}</span>`;
+
+        if (locked) {
+          return `<article class="room-card is-locked" aria-disabled="true">${body}</article>`;
+        }
+        return `<a class="room-card ${r.status === "cleared" ? "is-cleared" : ""} ${
+          r.isCurrent ? "is-current" : ""
+        }" href="${escapeHtml(r.href)}">${body}</a>`;
       })
       .join("");
 
