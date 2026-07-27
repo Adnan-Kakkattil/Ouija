@@ -167,6 +167,8 @@ router.post("/signup", async (req, res) => {
       solvedCount: 0,
       loginCount: 0,
       lastLoginAt: null,
+      lastChallengeId: null,
+      lastChallengeAt: null,
       createdAt: Date.now(),
       passwordHash: hash,
     };

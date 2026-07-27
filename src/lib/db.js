@@ -52,6 +52,8 @@ async function connect() {
     db.collection("solves").createIndex({ userId: 1 }),
     db.collection("logins").createIndex({ userId: 1, at: -1 }),
     db.collection("logins").createIndex({ at: -1 }),
+    db.collection("hints").createIndex({ userId: 1, challengeId: 1 }, { unique: true }),
+    db.collection("hints").createIndex({ userId: 1 }),
   ]);
 
   return db;

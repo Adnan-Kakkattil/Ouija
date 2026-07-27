@@ -60,19 +60,25 @@
         remember: !!(els.remember && els.remember.checked),
       });
 
-      /* First challenge: fullscreen transmission with sound, then the table */
-      if (window.FirstRite) {
+      /* Resume last trial after login (query ?next= still wins when explicit) */
+      const defaultNext = "dashboard.html";
+      const explicitNext = next !== defaultNext;
+      const dest = explicitNext ? next : Vault.resumeUrl(user, defaultNext);
+      const returning = Vault.hasProgress(user);
+
+      /* First-knock video only for brand-new mediums with no progress */
+      if (!returning && window.FirstRite) {
         FirstRite.reset();
         await FirstRite.play({
           force: true,
           onDone() {
-            Vault.go(next, { instant: true });
+            Vault.go(dest, { instant: true });
           },
         });
         return;
       }
 
-      Vault.go(next, { instant: true });
+      Vault.go(dest, { instant: true });
     } catch (err) {
       AuthUI.busy(els.submit, false);
       els.submit.textContent = "Open the board";

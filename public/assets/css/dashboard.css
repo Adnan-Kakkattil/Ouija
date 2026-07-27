@@ -108,6 +108,11 @@
   border-color: rgba(127, 212, 193, 0.45);
 }
 
+.challenge-card.is-current:not(.is-solved) {
+  border-color: rgba(200, 64, 47, 0.55);
+  box-shadow: 0 0 0 1px rgba(200, 64, 47, 0.2);
+}
+
 .challenge-card__top {
   display: flex;
   justify-content: space-between;
@@ -147,22 +152,21 @@
 }
 
 .hint {
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-top: 1px solid var(--border);
 }
 
-.hint summary {
-  cursor: pointer;
-  font-family: var(--font-type);
+.hint .typewriter-note {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.hint .muted {
+  margin: 0;
   font-size: var(--fs-xs);
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-  color: var(--brass-400);
-}
-
-.hint[open] summary {
-  margin-bottom: var(--sp-2);
+  opacity: 0.78;
 }
 
 .whoami__chip {

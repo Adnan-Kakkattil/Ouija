@@ -122,6 +122,38 @@
       });
     },
 
+    async focusChallenge(id) {
+      const data = await api("/api/challenges/" + encodeURIComponent(id) + "/focus", {
+        method: "POST",
+        body: {},
+      });
+      if (data.user) cachedUser = data.user;
+      return data;
+    },
+
+    async unlockHint(id) {
+      const data = await api("/api/challenges/" + encodeURIComponent(id) + "/hint", {
+        method: "POST",
+        body: {},
+      });
+      if (data.user) cachedUser = data.user;
+      return data;
+    },
+
+    resumeUrl(user, fallback) {
+      if (user && user.resumePath) return user.resumePath;
+      if (user && user.lastChallengeId) return "challenges.html#" + user.lastChallengeId;
+      return fallback || "dashboard.html";
+    },
+
+    hasProgress(user) {
+      if (!user) return false;
+      if (user.lastChallengeId) return true;
+      if (user.solvedCount > 0) return true;
+      if (user.solved && user.solved.length) return true;
+      return false;
+    },
+
     async requireAuth(redirectTo) {
       const user = await this.currentUser(true);
       if (!user) {

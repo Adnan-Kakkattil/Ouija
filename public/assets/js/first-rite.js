@@ -1,6 +1,6 @@
 /* =========================================================
-   OUIJA CTF — First transmission (login rite / challenge I)
-   Fullscreen video with sound. Triggered after login.
+   OUIJA CTF — The Story (first video / CTF prologue)
+   Fullscreen video with sound. Triggered after first sitting.
    ========================================================= */
 
 (function () {
@@ -16,29 +16,29 @@
     root.id = "firstRite";
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-modal", "true");
-    root.setAttribute("aria-label", "First transmission — Trial I");
+    root.setAttribute("aria-label", "The Story — OUIJA CTF");
     root.innerHTML = `
       <video class="rite__video" id="riteVideo" playsinline preload="auto">
         <source src="${SRC}" type="video/mp4">
       </video>
       <div class="rite__veil" id="riteVeil">
-        <p class="eyebrow">Trial I · The Whispering Wall</p>
-        <h2 class="rite__title">The first transmission</h2>
-        <p class="rite__lede">The house has something to show you. Sound on. Do not look away.</p>
+        <p class="eyebrow">Prologue · The Story</p>
+        <h2 class="rite__title">How this house woke</h2>
+        <p class="rite__lede">Before the trials, the story. Sound on. Do not look away.</p>
         <button class="btn btn--primary btn--lg" type="button" id="riteBegin">
-          Open the transmission
+          Begin the story
         </button>
       </div>
       <div class="rite__chrome" hidden id="riteChrome">
-        <p class="rite__label">First knock · listening…</p>
+        <p class="rite__label">The story unfolds…</p>
       </div>
       <div class="rite__end" hidden id="riteEnd">
-        <p class="eyebrow">Transmission complete</p>
-        <h2 class="rite__title">The first knock has been answered</h2>
-        <p class="rite__lede">Your first trial waits at the table. Look for what the living hid badly.</p>
+        <p class="eyebrow">Story complete</p>
+        <h2 class="rite__title">The board is waiting</h2>
+        <p class="rite__lede">Many trials lie ahead. Track your progress — and your circle’s. Hints cost points.</p>
         <div class="rite__end-actions">
           <button class="btn btn--spectral btn--lg" type="button" id="riteReplay">
-            Replay transmission
+            Replay the story
           </button>
           <button class="btn btn--primary btn--lg" type="button" id="riteContinue">
             Continue to the table
@@ -73,7 +73,7 @@
   }
 
   /**
-   * Play the first-challenge transmission fullscreen with sound.
+   * Play the CTF story fullscreen with sound.
    * Browsers may block unmuted autoplay after an await — the Begin
    * button always works because it is a fresh user gesture.
    */
@@ -162,7 +162,7 @@
       });
 
       video.addEventListener("error", () => {
-        if (window.Atmosphere) Atmosphere.toast("The transmission could not be received.", "error");
+        if (window.Atmosphere) Atmosphere.toast("The story could not be received.", "error");
         finish();
       });
 

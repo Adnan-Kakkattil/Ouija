@@ -74,10 +74,13 @@
         <p class="muted" id="modalMeta"></p>
       </header>
       <p id="modalDesc"></p>
-      <details class="hint">
-        <summary>Ask for a hint</summary>
-        <p id="modalHint" class="typewriter-note"></p>
-      </details>
+      <div class="hint" id="hintBox">
+        <button class="btn btn--spectral btn--sm" type="button" id="unlockHintBtn">
+          Ask for a hint
+        </button>
+        <p id="modalHint" class="typewriter-note" hidden></p>
+        <p id="hintCostNote" class="muted"></p>
+      </div>
       <div class="field" data-field="flag">
         <label class="field__label" for="flagInput"><span>Offer a flag</span></label>
         <div class="field__shell">

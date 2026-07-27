@@ -111,7 +111,9 @@ const challenges = [
   },
 ];
 
-function publicChallenge(c, solvedIds) {
+function publicChallenge(c, solvedIds, unlockedHintIds) {
+  const unlocked = Array.isArray(unlockedHintIds) && unlockedHintIds.includes(c.id);
+  const cost = hintCost(c.difficulty);
   return {
     id: c.id,
     category: c.category,
@@ -121,9 +123,19 @@ function publicChallenge(c, solvedIds) {
     points: c.points,
     difficulty: c.difficulty,
     description: c.description,
-    hint: c.hint,
-    solved: solvedIds.includes(c.id),
+    hintCost: cost,
+    hintUnlocked: unlocked,
+    /* Hint text only after the medium pays for it */
+    hint: unlocked ? c.hint : null,
+    solved: (solvedIds || []).includes(c.id),
   };
+}
+
+function hintCost(difficulty) {
+  const d = String(difficulty || "easy").toLowerCase();
+  if (d === "hard") return 30;
+  if (d === "medium") return 20;
+  return 10; /* easy */
 }
 
 function findChallenge(id) {
@@ -151,4 +163,4 @@ function trialSummary(list) {
   return [...map.values()];
 }
 
-module.exports = { challenges, publicChallenge, findChallenge, trialSummary };
+module.exports = { challenges, publicChallenge, findChallenge, trialSummary, hintCost };

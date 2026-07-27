@@ -42,9 +42,16 @@
     document.getElementById("userSolved").textContent = String(
       (user.solved && user.solved.length) || user.solvedCount || 0
     );
-    document.getElementById("userCircle").textContent = user.teamName;
-    const logins = document.getElementById("userLogins");
-    if (logins) logins.textContent = String(user.loginCount || 0);
+    const tp = user.teamProgress || {};
+    const teamScore = document.getElementById("teamScore");
+    const teamSolved = document.getElementById("teamSolved");
+    if (teamScore) teamScore.textContent = String(tp.score != null ? tp.score : user.score || 0);
+    if (teamSolved)
+      teamSolved.textContent = String(
+        tp.solvedCount != null
+          ? tp.solvedCount
+          : (user.solved && user.solved.length) || user.solvedCount || 0
+      );
   }
 
   function wireBoard() {
@@ -76,28 +83,40 @@
   async function loadNext(user) {
     try {
       const list = await Vault.challenges();
-      const next = list.find((c) => !c.solved) || list[0];
-      if (!next) {
+      const resumeId = user.lastChallengeId;
+      const resume = resumeId && list.find((c) => c.id === resumeId);
+      const nextUnsolved = list.find((c) => !c.solved);
+      const focus = (resume && !resume.solved ? resume : null) || nextUnsolved || resume || list[0];
+
+      if (!focus) {
         document.getElementById("nextTitle").textContent = "All quiet";
         document.getElementById("nextDesc").textContent = "No trials are open.";
         return;
       }
+
       const remaining = list.filter((c) => !c.solved).length;
-      document.getElementById("nextTitle").textContent = next.solved
+      const isResume = !!(resume && focus.id === resume.id);
+
+      document.getElementById("nextTitle").textContent = focus.solved
         ? "All flags claimed"
-        : next.title;
-      document.getElementById("nextDesc").textContent = next.solved
+        : focus.title;
+      document.getElementById("nextDesc").textContent = focus.solved
         ? "Your circle has finished every open trial."
-        : next.trial +
+        : (isResume ? "Resume · " : "") +
+          focus.trial +
           " · " +
-          next.points +
+          focus.points +
           " pts · " +
-          next.difficulty +
+          focus.difficulty +
           " · " +
           remaining +
           " left";
-      document.getElementById("nextLink").href = "challenges.html#" + next.id;
-      document.getElementById("nextLink").textContent = next.solved ? "Review trials" : "Begin";
+      document.getElementById("nextLink").href = "challenges.html#" + focus.id;
+      document.getElementById("nextLink").textContent = focus.solved
+        ? "Review trials"
+        : isResume
+          ? "Resume trial"
+          : "Begin";
     } catch (err) {
       document.getElementById("nextTitle").textContent = "The trials are sealed";
       document.getElementById("nextDesc").textContent = err.message || "Could not load challenges.";

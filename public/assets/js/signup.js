@@ -160,7 +160,7 @@
     const stage = document.getElementById("welcomeBoard");
 
     const finish = async () => {
-      /* After enrolment, play the first-challenge transmission then open the table */
+      /* After enrolment, play the CTF story then open the table */
       if (window.FirstRite) {
         FirstRite.reset();
         await FirstRite.play({

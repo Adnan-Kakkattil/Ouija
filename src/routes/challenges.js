@@ -2,7 +2,7 @@
 
 const express = require("express");
 const store = require("../lib/store");
-const { challenges, publicChallenge, findChallenge, trialSummary } = require("../lib/challenges");
+const { challenges, publicChallenge, findChallenge, trialSummary, hintCost } = require("../lib/challenges");
 const { requireAuth, optionalAuth } = require("./auth");
 
 const router = express.Router();
@@ -10,13 +10,15 @@ const router = express.Router();
 router.get("/", optionalAuth, async (req, res, next) => {
   try {
     let solved = [];
+    let unlockedHints = [];
     if (req.user) {
       const pub = await store.publicUser(req.user);
       solved = pub.solved || [];
+      unlockedHints = pub.unlockedHints || [];
     }
     res.json({
       ok: true,
-      challenges: challenges.map((c) => publicChallenge(c, solved)),
+      challenges: challenges.map((c) => publicChallenge(c, solved, unlockedHints)),
       trials: trialSummary(challenges),
     });
   } catch (err) {
@@ -52,8 +54,67 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const c = findChallenge(req.params.id);
     if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
-    const user = await store.publicUser(req.user);
-    res.json({ ok: true, challenge: publicChallenge(c, user.solved || []) });
+    await store.setLastChallenge(req.user.id, c.id);
+    const user = await store.publicUser(await store.findUserById(req.user.id));
+    res.json({
+      ok: true,
+      challenge: publicChallenge(c, user.solved || [], user.unlockedHints || []),
+      user,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Persist which trial the medium is working on (survives logout) */
+router.post("/:id/focus", requireAuth, async (req, res, next) => {
+  try {
+    const c = findChallenge(req.params.id);
+    if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+    await store.setLastChallenge(req.user.id, c.id);
+    const user = await store.publicUser(await store.findUserById(req.user.id));
+    res.json({ ok: true, lastChallengeId: c.id, user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Unlock hint: easy −10 / medium −20 / hard −30. One purchase per user. */
+router.post("/:id/hint", requireAuth, async (req, res, next) => {
+  try {
+    const c = findChallenge(req.params.id);
+    if (!c) return res.status(404).json({ ok: false, message: "That trial has dissolved." });
+
+    const cost = hintCost(c.difficulty);
+    const result = await store.unlockHint(req.user.id, c.id, cost);
+    const user = await store.publicUser(await store.findUserById(req.user.id));
+
+    if (result.alreadyUnlocked) {
+      return res.json({
+        ok: true,
+        alreadyUnlocked: true,
+        cost: 0,
+        deducted: 0,
+        hint: c.hint,
+        message: "This whisper was already paid for.",
+        user,
+      });
+    }
+
+    res.json({
+      ok: true,
+      alreadyUnlocked: false,
+      cost: result.cost,
+      deducted: result.deducted,
+      hint: c.hint,
+      message:
+        "Hint unlocked. −" +
+        result.cost +
+        " pts deducted from your score" +
+        (result.deducted < result.cost ? " (score floored at 0)" : "") +
+        ".",
+      user,
+    });
   } catch (err) {
     next(err);
   }

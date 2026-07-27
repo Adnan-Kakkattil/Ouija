@@ -28,6 +28,9 @@ function solves() {
 function logins() {
   return getDb().collection("logins");
 }
+function hints() {
+  return getDb().collection("hints");
+}
 
 const store = {
   async seedTeams() {
@@ -142,7 +145,37 @@ const store = {
       { id: userId },
       { $inc: { score: points, solvedCount: 1 } }
     );
+    await this.advanceProgress(userId, challengeId);
     return row;
+  },
+
+  /* Remember which trial the medium last opened (survives logout/relogin) */
+  async setLastChallenge(userId, challengeId) {
+    if (!userId || !challengeId) return null;
+    await users().updateOne(
+      { id: userId },
+      { $set: { lastChallengeId: challengeId, lastChallengeAt: Date.now() } }
+    );
+    return this.findUserById(userId);
+  },
+
+  /* After a solve, park on the next unsolved trial (or the one just claimed) */
+  async advanceProgress(userId, justSolvedId) {
+    const { challenges } = require("./challenges");
+    const userSolves = await this.listSolvesForUser(userId);
+    const done = new Set(userSolves.map((s) => s.challengeId));
+    if (justSolvedId) done.add(justSolvedId);
+    const next = challenges.find((c) => !done.has(c.id));
+    const lastChallengeId = next ? next.id : justSolvedId || null;
+    if (!lastChallengeId) return null;
+    return this.setLastChallenge(userId, lastChallengeId);
+  },
+
+  resumePath(user) {
+    if (user && user.lastChallengeId) {
+      return "challenges.html#" + user.lastChallengeId;
+    }
+    return "dashboard.html";
   },
 
   async recordLogin(userId, meta = {}) {
@@ -164,11 +197,107 @@ const store = {
     );
   },
 
+  async listHintIdsForUser(userId) {
+    const rows = await hints().find({ userId }, { projection: { challengeId: 1, _id: 0 } }).toArray();
+    return rows.map((r) => r.challengeId);
+  },
+
+  async hasHint(userId, challengeId) {
+    const row = await hints().findOne({ userId, challengeId }, { projection: { _id: 1 } });
+    return !!row;
+  },
+
+  /**
+   * Unlock a hint: deduct points by difficulty (easy 10 / medium 20 / hard 30).
+   * One purchase per user per challenge. Team score drops because it sums member scores.
+   */
+  async unlockHint(userId, challengeId, cost) {
+    if (await this.hasHint(userId, challengeId)) {
+      return { alreadyUnlocked: true, cost: 0, deducted: 0 };
+    }
+
+    const user = await this.findUserById(userId);
+    if (!user) {
+      const err = new Error("Chair gone cold.");
+      err.status = 401;
+      throw err;
+    }
+
+    const current = user.score || 0;
+    const deducted = Math.min(cost, Math.max(0, current));
+    const nextScore = Math.max(0, current - cost);
+
+    try {
+      await hints().insertOne({
+        id: "hint_" + randomUUID().replace(/-/g, "").slice(0, 12),
+        userId,
+        challengeId,
+        cost,
+        deducted,
+        at: Date.now(),
+      });
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return { alreadyUnlocked: true, cost: 0, deducted: 0 };
+      }
+      throw err;
+    }
+
+    await users().updateOne(
+      { id: userId },
+      {
+        $set: { score: nextScore },
+        $inc: { hintsUsed: 1, hintPointsSpent: deducted },
+      }
+    );
+
+    return { alreadyUnlocked: false, cost, deducted, score: nextScore };
+  },
+
+  async teamProgress(teamId) {
+    if (!teamId) return null;
+    const team = await this.findTeam(teamId);
+    if (!team) return null;
+
+    const members = await users()
+      .find({ teamId }, { projection: { _id: 0, id: 1, username: 1, score: 1, solvedCount: 1, lastChallengeId: 1 } })
+      .toArray();
+    const memberIds = members.map((m) => m.id);
+    const allSolves =
+      memberIds.length === 0
+        ? []
+        : await solves()
+            .find({ userId: { $in: memberIds } }, { projection: { _id: 0, challengeId: 1, userId: 1, points: 1, at: 1 } })
+            .toArray();
+
+    const solvedSet = [...new Set(allSolves.map((s) => s.challengeId))];
+    const score = members.reduce((sum, m) => sum + (m.score || 0), 0);
+
+    return {
+      id: team.id,
+      name: team.name,
+      sigil: team.sigil,
+      members: members.map((m) => ({
+        id: m.id,
+        username: m.username,
+        score: m.score || 0,
+        solvedCount: m.solvedCount || 0,
+        lastChallengeId: m.lastChallengeId || null,
+      })),
+      memberCount: members.length,
+      score,
+      solvedChallengeIds: solvedSet,
+      solvedCount: solvedSet.length,
+    };
+  },
+
   async publicUser(user) {
     if (!user) return null;
-    const [team, userSolves] = await Promise.all([
+    const [team, userSolves, hintIds, teamProg] = await Promise.all([
       this.findTeam(user.teamId),
       this.listSolvesForUser(user.id),
+      this.listHintIdsForUser(user.id),
+      this.teamProgress(user.teamId),
     ]);
     return {
       id: user.id,
@@ -180,8 +309,22 @@ const store = {
       score: user.score || 0,
       solved: userSolves.map((s) => s.challengeId),
       solvedCount: user.solvedCount || userSolves.length,
+      hintsUsed: user.hintsUsed || hintIds.length,
+      hintPointsSpent: user.hintPointsSpent || 0,
+      unlockedHints: hintIds,
       loginCount: user.loginCount || 0,
       lastLoginAt: user.lastLoginAt || null,
+      lastChallengeId: user.lastChallengeId || null,
+      lastChallengeAt: user.lastChallengeAt || null,
+      resumePath: this.resumePath(user),
+      teamProgress: teamProg
+        ? {
+            score: teamProg.score,
+            solvedCount: teamProg.solvedCount,
+            solvedChallengeIds: teamProg.solvedChallengeIds,
+            memberCount: teamProg.memberCount,
+          }
+        : null,
       createdAt: user.createdAt,
       role: user.role || "medium",
     };
