@@ -193,7 +193,12 @@
         grid.innerHTML =
           '<p class="typewriter-note">' +
           escapeHtml(err.message || "Could not read the doors.") +
-          "</p>";
+          ' <button type="button" class="btn btn--ghost btn--sm" id="retryRooms">Try again</button></p>';
+        const retry = document.getElementById("retryRooms");
+        if (retry) retry.addEventListener("click", () => loadRooms());
+      }
+      if (window.Atmosphere) {
+        Atmosphere.toast(err.message || "Rooms could not be loaded.", "error", 4000);
       }
     }
   }

@@ -94,6 +94,8 @@ function mountApp(sessionStore) {
     const payload = {
       ok: true,
       service: "ouija-ctf",
+      build: "rooms-v1",
+      rooms: true,
       port: PORT,
       host: HOST,
       db: isConnected() ? "mongodb" : "memory-degraded",
