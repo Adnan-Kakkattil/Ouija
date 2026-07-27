@@ -11,31 +11,66 @@
   let goodbyeCount = 0;
   let goodbyeWindow = 0;
 
+  function showBootError(err) {
+    const msg =
+      (err && err.message) ||
+      "Could not open the table. The Hostinger Node app may be restarting.";
+    const grid = document.getElementById("roomsGrid");
+    if (grid) {
+      grid.innerHTML =
+        '<p class="typewriter-note">' +
+        escapeHtml(msg) +
+        '</p><p class="typewriter-note"><button type="button" class="btn btn--primary btn--sm" id="retryBoot">Try again</button></p>';
+      const retry = document.getElementById("retryBoot");
+      if (retry) retry.addEventListener("click", () => location.reload());
+    }
+    const nextTitle = document.getElementById("nextTitle");
+    const nextDesc = document.getElementById("nextDesc");
+    if (nextTitle) nextTitle.textContent = "Table unreachable";
+    if (nextDesc) nextDesc.textContent = "Restart the Node app in hPanel if this lasts more than a minute.";
+    if (window.Atmosphere) Atmosphere.toast(msg, "error", 6000);
+  }
+
   async function boot() {
+    if (!window.Vault) {
+      throw new Error("Vault failed to load. Hard-refresh (Ctrl+F5) and try again.");
+    }
+
     const user = await Vault.requireAuth("login.html");
     if (!user) return;
 
-    const gated = await Vault.playIntro(user, () => {
-      location.reload();
-    });
+    let gated = false;
+    try {
+      gated = await Vault.playIntro(user, () => {
+        location.reload();
+      });
+    } catch (err) {
+      console.warn("[dashboard] intro skipped", err);
+    }
     if (gated) return;
 
     paintUser(user);
 
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      try {
-        await Vault.logout();
-      } catch (_) {
-        /* still leave */
-      }
-      Vault.go("index.html");
-    });
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await Vault.logout();
+        } catch (_) {
+          /* still leave */
+        }
+        Vault.go("index.html");
+      });
+    }
 
     wireBoard();
-    document.getElementById("replayRite").addEventListener("click", () => {
-      if (!window.FirstRite) return;
-      FirstRite.play({ force: true });
-    });
+    const replay = document.getElementById("replayRite");
+    if (replay) {
+      replay.addEventListener("click", () => {
+        if (!window.FirstRite) return;
+        FirstRite.play({ force: true });
+      });
+    }
     await Promise.all([loadRooms(user), loadLadder(), loadLedger(user)]);
   }
 
@@ -296,6 +331,6 @@
 
   boot().catch((err) => {
     console.error(err);
-    if (window.Atmosphere) Atmosphere.toast("Could not open the table.", "error");
+    showBootError(err);
   });
 })();

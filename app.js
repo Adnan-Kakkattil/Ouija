@@ -1,16 +1,21 @@
 "use strict";
 
 /**
- * OUIJA CTF — Hostinger Business / Cloud Node entry point.
+ * OUIJA CTF — Hostinger Business Web Hosting (Node.js Web App).
  *
- * Hostinger Node Web Apps (Business plan):
+ * hPanel → Websites → Node.js Web App:
  *  - Framework: Express.js (or Other)
  *  - Entry file: app.js
  *  - Build command: npm run build   (no-op)
  *  - Start command: npm start
- *  - Must listen on process.env.PORT (injected by Hostinger)
- *  - Bind 0.0.0.0 so the reverse proxy can reach the process
- *  - Set env vars in hPanel (do not rely on committed .env)
+ *  - Node version: 20.x preferred (18 / 22 / 24 also supported)
+ *  - Must listen on process.env.PORT (Hostinger injects this)
+ *  - Bind 0.0.0.0 so the managed reverse proxy can reach the process
+ *  - Env vars in hPanel (MONGODB_URI, SESSION_SECRET, COOKIE_SECURE=1, NODE_ENV=production)
+ *
+ * After GitHub auto-deploy the Node process restarts for ~30–90s. During that
+ * window /api/* may 404 HTML while static HTML still loads — clients retry.
+ * If /api/health stays dead: hPanel → website → Running → Restart.
  */
 
 const path = require("path");
@@ -48,6 +53,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const IS_PROD = process.env.NODE_ENV === "production";
 
+/* Hostinger terminates TLS at the proxy — honour X-Forwarded-* */
 app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "64kb" }));
@@ -57,7 +63,17 @@ app.use(cookieParser());
 function cookieSecure() {
   if (process.env.COOKIE_SECURE === "1") return true;
   if (process.env.COOKIE_SECURE === "0") return false;
+  /* Business Node is always behind HTTPS at the edge */
   return IS_PROD;
+}
+
+function isHostinger() {
+  return Boolean(
+    process.env.HOSTINGER ||
+      process.env.HOSTINGER_SITE_ID ||
+      process.env.HS_SERVER ||
+      /hostinger/i.test(String(process.env.HOSTNAME || ""))
+  );
 }
 
 function mountApp(sessionStore) {
@@ -94,8 +110,9 @@ function mountApp(sessionStore) {
     const payload = {
       ok: true,
       service: "ouija-ctf",
-      build: "rooms-v1",
+      build: "rooms-v2",
       rooms: true,
+      hostinger: isHostinger() || IS_PROD,
       port: PORT,
       host: HOST,
       db: isConnected() ? "mongodb" : "memory-degraded",
@@ -137,7 +154,13 @@ function mountApp(sessionStore) {
           res.setHeader("Cache-Control", "public, max-age=120, must-revalidate");
           return;
         }
-        if (/\.(mp4|webm|png|jpe?g|gif|svg|webp|woff2?)$/i.test(lower)) {
+        if (/\.(mp4|webm)$/i.test(lower)) {
+          /* Large rite/gate videos — long cache; Express streams with Range support */
+          res.setHeader("Cache-Control", IS_PROD ? "public, max-age=86400, immutable" : "no-cache");
+          res.setHeader("Accept-Ranges", "bytes");
+          return;
+        }
+        if (/\.(png|jpe?g|gif|svg|webp|woff2?)$/i.test(lower)) {
           res.setHeader("Cache-Control", IS_PROD ? "public, max-age=86400" : "no-cache");
           return;
         }
@@ -191,28 +214,66 @@ async function createSessionStore() {
   }
 }
 
+let server = null;
+
+function listen() {
+  return new Promise((resolve, reject) => {
+    server = app.listen(PORT, HOST, () => {
+      console.log(`[ouija] listening on http://${HOST}:${PORT}`);
+      console.log(`[ouija] static root: ${PUBLIC_DIR}`);
+      console.log(`[ouija] env: NODE_ENV=${process.env.NODE_ENV || "unset"} PORT=${PORT}`);
+      resolve(server);
+    });
+    server.on("error", reject);
+    /* Shared hosting: avoid hanging sockets after Hostinger recycle */
+    server.keepAliveTimeout = 65_000;
+    server.headersTimeout = 70_000;
+  });
+}
+
+function wireSignals() {
+  const shutdown = (signal) => {
+    console.log(`[ouija] ${signal} — closing (Hostinger recycle/redeploy)`);
+    if (!server) {
+      process.exit(0);
+      return;
+    }
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 8000).unref();
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("unhandledRejection", (err) => {
+    console.error("[ouija] unhandledRejection", err && err.message ? err.message : err);
+  });
+}
+
 async function boot() {
   if (!process.env.SESSION_SECRET && IS_PROD) {
-    console.warn("[ouija] WARNING: SESSION_SECRET is not set in production.");
+    console.warn("[ouija] WARNING: SESSION_SECRET is not set in hPanel Environment Variables.");
+  }
+  if (IS_PROD && process.env.COOKIE_SECURE !== "0" && process.env.COOKIE_SECURE !== "1") {
+    console.warn("[ouija] TIP: set COOKIE_SECURE=1 in hPanel for HTTPS session cookies.");
   }
 
   const sessionStore = await createSessionStore();
   mountApp(sessionStore);
-
-  app.listen(PORT, HOST, () => {
-    console.log(`Ouija CTF listening on http://${HOST}:${PORT}`);
-    console.log(`Static root: ${PUBLIC_DIR}`);
-  });
+  wireSignals();
+  await listen();
 }
 
 boot().catch((err) => {
   console.error("[ouija] fatal boot error:", err);
-  /* Last resort: still try to serve static files so the site is not a blank 503 */
+  /* Last resort: still try to serve so Hostinger health checks are not blank 503 */
   try {
     mountApp(new session.MemoryStore());
-    app.listen(PORT, HOST, () => {
-      console.error("[ouija] booted in emergency static mode");
-    });
+    wireSignals();
+    listen()
+      .then(() => console.error("[ouija] booted in emergency memory-session mode"))
+      .catch((err2) => {
+        console.error("[ouija] emergency boot failed:", err2);
+        process.exit(1);
+      });
   } catch (err2) {
     console.error("[ouija] emergency boot failed:", err2);
     process.exit(1);

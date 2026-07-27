@@ -11,7 +11,23 @@
     username: /^[a-z0-9](?:[a-z0-9_.-]{1,22})[a-z0-9]$/i,
   };
 
-  async function api(path, options) {
+  const HOSTINGER_DOWN =
+    "The house is restarting (Hostinger Node). Wait a few seconds, then try again — or Restart the app in hPanel.";
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function isTransientStatus(status) {
+    return status === 0 || status === 408 || status === 425 || status === 429 || status === 502 || status === 503 || status === 504;
+  }
+
+  function looksLikeHtml(text) {
+    const t = String(text || "").trim().slice(0, 200).toLowerCase();
+    return t.startsWith("<!DOCTYPE") || t.startsWith("<html") || t.includes("cannot get /api");
+  }
+
+  async function apiOnce(path, options) {
     const opts = Object.assign({ credentials: "same-origin" }, options || {});
     opts.headers = Object.assign({ Accept: "application/json" }, opts.headers || {});
     if (opts.body && typeof opts.body === "object" && !(opts.body instanceof FormData)) {
@@ -23,17 +39,34 @@
     try {
       res = await fetch(path, opts);
     } catch {
-      const err = new Error("Could not reach the board. Is the server running?");
+      const err = new Error(HOSTINGER_DOWN);
       err.status = 0;
+      err.hostingerDown = true;
       throw err;
     }
 
+    const ct = String(res.headers.get("content-type") || "").toLowerCase();
+    const raw = await res.text();
     let data = null;
-    try {
-      data = await res.json();
-    } catch {
+
+    if (ct.includes("application/json") || (raw && raw.trim().charAt(0) === "{")) {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = null;
+      }
+    }
+
+    if (!data) {
+      if (looksLikeHtml(raw) || !ct.includes("json")) {
+        const err = new Error(HOSTINGER_DOWN);
+        err.status = res.status || 503;
+        err.hostingerDown = true;
+        throw err;
+      }
       data = { ok: false, message: "The veil returned silence." };
     }
+
     if (!res.ok) {
       const err = new Error((data && data.message) || "The board refused.");
       err.field = data && data.field;
@@ -42,6 +75,26 @@
       throw err;
     }
     return data;
+  }
+
+  async function api(path, options) {
+    const opts = options || {};
+    const retries = opts.retries != null ? Number(opts.retries) : 2;
+    const callOpts = Object.assign({}, opts);
+    delete callOpts.retries;
+
+    let lastErr;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await apiOnce(path, callOpts);
+      } catch (err) {
+        lastErr = err;
+        const transient = err && (err.hostingerDown || isTransientStatus(err.status));
+        if (!transient || attempt === retries) throw err;
+        await sleep(450 * (attempt + 1));
+      }
+    }
+    throw lastErr;
   }
 
   let cachedUser = undefined;
