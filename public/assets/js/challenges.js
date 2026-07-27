@@ -151,7 +151,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room2-1") {
+      if (c.id === "room2-2") {
+        note.textContent = "Download the notebook page. A small Caesar shift unlocks her words.";
+      } else if (c.id === "room2-1") {
         note.textContent = "Download the torn clipping. Identify the paper, then find its archive.";
       } else if (c.id === "room1-8") {
         note.textContent = "Open the archive. Base64 is only the first veil — XOR waits beneath.";

@@ -212,12 +212,13 @@ const challenges = [
     roman: "II",
     title: "Encrypted Journal",
     points: 200,
-    difficulty: "medium",
-    pending: true,
+    difficulty: "easy",
     description:
-      "Olivia's encrypted investigation journal lies among the red string and photographs. The cipher is not yet readable to the circle.",
-    hint: "Evidence for this clue arrives soon.",
-    correctFlag: "flag{room2_pending_journal}",
+      "A notebook holds one of Olivia's encrypted journal entries. She used a simple cipher to hide what she discovered on her first night — decode it and recover what she wrote.",
+    hint: "A small shift reveals the truth.",
+    correctFlag: "flag{she_found_evidence}",
+    artifactUrl: "assets/files/olivia-journal.html",
+    artifactLabel: "Download the journal entry",
   },
   {
     id: "room2-3",

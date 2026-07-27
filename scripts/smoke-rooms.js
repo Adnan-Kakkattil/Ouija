@@ -114,15 +114,16 @@ function assert(cond, msg) {
 
   const pending = await req(
     "POST",
-    "/api/challenges/room2-2/submit",
-    { flag: "flag{room2_pending_journal}" },
+    "/api/challenges/room2-3/submit",
+    { flag: "flag{room2_pending_camera}" },
     ck
   );
   assert(pending.status === 403, "pending room2 challenge blocked");
 
   await req("POST", "/api/challenges/room2-1/submit", { flag: "ouija{olivia_investigated}" }, ck);
+  await req("POST", "/api/challenges/room2-2/submit", { flag: "flag{she_found_evidence}" }, ck);
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
-  assert(rooms[1].solvedChallenges === 1, "room2 has one solve");
+  assert(rooms[1].solvedChallenges === 2, "room2 has two solves");
 
   const pages = ["/", "/dashboard.html", "/room.html", "/challenges.html"];
   for (const p of pages) {

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olivia's Journal — Encrypted Entry</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Special+Elite&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0b0b;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem 1rem 2.5rem;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(circle at 25% 20%,rgba(255,255,255,.035),transparent 32%),
+    radial-gradient(circle at 70% 70%,rgba(255,255,255,.025),transparent 36%);
+  pointer-events:none;
+}
+.toolbar{
+  position:relative;z-index:2;
+  display:flex;flex-wrap:wrap;gap:.6rem;
+  justify-content:center;margin-bottom:1.25rem;
+}
+.toolbar button,.toolbar a{
+  font-family:"Special Elite", monospace;
+  font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+  background:transparent;color:#c9b896;
+  border:1px solid rgba(201,184,150,.35);
+  padding:.55rem .9rem;cursor:pointer;text-decoration:none;
+}
+.toolbar button:hover,.toolbar a:hover{border-color:#e8d7a8;color:#f4ecd8}
+.book{
+  position:relative;z-index:1;
+  width:min(420px,94vw);
+  background:
+    linear-gradient(165deg,#f3e6c8 0%,#e8d4a8 45%,#dcc698 100%);
+  color:#2a1f14;
+  padding:2rem 1.75rem 2.2rem;
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.55),
+    inset 0 0 0 1px rgba(90,60,20,.15),
+    inset 8px 0 18px rgba(90,50,10,.08);
+  border-radius:2px 8px 8px 2px;
+}
+.book::before{
+  content:"";
+  position:absolute;left:0;top:0;bottom:0;width:14px;
+  background:linear-gradient(90deg,#6b4423,#8a5a2b 40%,transparent);
+  opacity:.55;
+}
+.eyebrow{
+  font-family:"Special Elite", monospace;
+  font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:#6a5340;margin-bottom:.5rem;
+}
+h1{
+  font-family:"IM Fell English", serif;
+  font-size:1.45rem;margin-bottom:.35rem;color:#1f160f;
+}
+.date{
+  font-family:"Caveat", cursive;
+  font-size:1.15rem;color:#5a4535;margin-bottom:1.1rem;
+}
+.cipher{
+  font-family:"Caveat", cursive;
+  font-size:1.35rem;line-height:1.55;
+  white-space:pre-wrap;word-break:break-word;
+  color:#24180f;
+}
+.note{
+  margin-top:1.25rem;padding-top:.85rem;
+  border-top:1px dashed rgba(60,40,20,.28);
+  font-family:"Special Elite", monospace;
+  font-size:.62rem;color:#6a5340;letter-spacing:.04em;
+}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="dlPng">Save as PNG</button>
+    <a href="olivia-journal.html" download="olivia-journal.html">Save HTML</a>
+  </div>
+
+  <article class="book" id="page" aria-label="Encrypted journal entry">
+    <p class="eyebrow">Investigation notebook · Entry I</p>
+    <h1>First night</h1>
+    <p class="date">Undated — ciphered in her hand</p>
+    <pre class="cipher" id="cipher">Rolyld'v iluvw qljkw lq wkh lqyhvwljdwlrq urrp.
+
+Wkh orfdo jkrvw vwrulhv gr qrw pdwfk zkdw L irxqg xqghu wkh iorruerdugv.
+
+iodj{vkh_irxqg_hylghqfh}
+
+L pxvw klgh wklv xqwlo L nqrz zkr hovh kdv ehhq khuh.</pre>
+    <p class="note">She always preferred a small shift of the alphabet.</p>
+  </article>
+
+<script>
+(function () {
+  function downloadPng() {
+    var node = document.getElementById("page");
+    function snap() {
+      html2canvas(node, { backgroundColor: null, scale: 2 }).then(function (canvas) {
+        var a = document.createElement("a");
+        a.download = "olivia-journal.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      });
+    }
+    if (!window.html2canvas) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      s.onload = snap;
+      document.head.appendChild(s);
+      return;
+    }
+    snap();
+  }
+  document.getElementById("dlPng").addEventListener("click", downloadPng);
+})();
+</script>
+</body>
+</html>
