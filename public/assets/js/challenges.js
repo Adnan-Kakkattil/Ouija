@@ -145,13 +145,15 @@
     box.hidden = false;
     link.href = c.artifactUrl;
     link.textContent = c.artifactLabel || "Download evidence";
-    if (/\.zip$/i.test(c.artifactUrl)) {
+    if (/\.(zip|png|jpe?g|gif|webp)$/i.test(c.artifactUrl)) {
       link.setAttribute("download", c.artifactUrl.split("/").pop());
     } else {
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room1-3") {
+      if (c.id === "room1-4") {
+        note.textContent = "Download the crooked portrait. Hidden text lies inside the image.";
+      } else if (c.id === "room1-3") {
         note.textContent = "Download the ZIP sealed inside the wooden box. Crack its password.";
       } else if (c.id === "room1-2") {
         note.textContent = "Open the wall and download the prayer as PNG.";

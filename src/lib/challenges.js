@@ -65,6 +65,21 @@ const challenges = [
     artifactLabel: "Download the locked archive",
   },
   {
+    id: "room1-4",
+    category: "forensics",
+    trial: "Room I · The First Chamber",
+    roman: "I",
+    title: "Family Portrait",
+    points: 200,
+    difficulty: "medium",
+    description:
+      "A family photograph hanging crooked on the wall. Something is hidden inside the image — recover the concealed text.",
+    hint: "Not everything in a photograph is meant to be seen. Look beneath the emulsion.",
+    correctFlag: "flag{mother_left_me}",
+    artifactUrl: "assets/files/family.png",
+    artifactLabel: "Download the family portrait",
+  },
+  {
     id: "whisper-2",
     category: "web",
     trial: "The Whispering Wall",
