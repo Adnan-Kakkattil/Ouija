@@ -2,18 +2,22 @@
 
 const express = require("express");
 const store = require("../lib/store");
-const { challenges, publicChallenge, findChallenge } = require("../lib/challenges");
-const { requireAuth } = require("./auth");
+const { challenges, publicChallenge, findChallenge, trialSummary } = require("../lib/challenges");
+const { requireAuth, optionalAuth } = require("./auth");
 
 const router = express.Router();
 
-router.get("/", requireAuth, async (req, res, next) => {
+router.get("/", optionalAuth, async (req, res, next) => {
   try {
-    const user = await store.publicUser(req.user);
-    const solved = user.solved || [];
+    let solved = [];
+    if (req.user) {
+      const pub = await store.publicUser(req.user);
+      solved = pub.solved || [];
+    }
     res.json({
       ok: true,
       challenges: challenges.map((c) => publicChallenge(c, solved)),
+      trials: trialSummary(challenges),
     });
   } catch (err) {
     next(err);

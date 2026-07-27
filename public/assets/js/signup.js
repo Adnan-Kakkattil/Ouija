@@ -95,10 +95,18 @@
     own.appendChild(opt);
     select.appendChild(own);
 
-    const circles = document.querySelector("[data-tally-circles]");
-    const mediums = document.querySelector("[data-tally-mediums]");
-    if (circles) circles.textContent = String(teams.length);
-    if (mediums) mediums.textContent = String(teams.reduce((n, t) => n + t.memberCount, 0));
+    try {
+      const stats = await Vault.stats();
+      const circles = document.querySelector("[data-tally-circles]");
+      const mediums = document.querySelector("[data-tally-mediums]");
+      if (circles) circles.textContent = String(stats.circles || teams.length);
+      if (mediums) mediums.textContent = String(stats.mediums || 0);
+    } catch {
+      const circles = document.querySelector("[data-tally-circles]");
+      const mediums = document.querySelector("[data-tally-mediums]");
+      if (circles) circles.textContent = String(teams.length);
+      if (mediums) mediums.textContent = String(teams.reduce((n, t) => n + t.memberCount, 0));
+    }
 
     const wanted = new URLSearchParams(location.search).get("circle");
     if (wanted && [...els.team.options].some((o) => o.value === wanted)) {
@@ -136,7 +144,8 @@
       });
       await welcome(user);
     } catch (err) {
-      AuthUI.busy(els.submit, false, "Take my seat");
+      AuthUI.busy(els.submit, false);
+      els.submit.textContent = "Take my seat";
       if (err && err.field) {
         AuthUI.setError(err.field, err.message);
         AuthUI.focusField(err.field);
@@ -149,31 +158,42 @@
   function welcome(user) {
     const screen = document.getElementById("welcome");
     const stage = document.getElementById("welcomeBoard");
+
+    const finish = async () => {
+      /* After enrolment, play the first-challenge transmission then open the table */
+      if (window.FirstRite) {
+        FirstRite.reset();
+        await FirstRite.play({
+          force: true,
+          onDone() {
+            Vault.go("dashboard.html", { instant: true });
+          },
+        });
+        return;
+      }
+      Vault.go("dashboard.html", { instant: true });
+    };
+
     if (!screen || !stage || !stage.ouija) {
-      location.href = "dashboard.html";
-      return Promise.resolve();
+      return finish();
     }
+
     screen.classList.add("is-open");
     screen.setAttribute("aria-hidden", "false");
     const name = user.username.toUpperCase().replace(/[^A-Z0-9]/g, "");
     const phrase = ("WELCOME " + (name || "MEDIUM")).slice(0, 22);
 
     return new Promise((resolve) => {
-      stage.addEventListener(
-        "ouija:spell-end",
-        () => {
-          setTimeout(() => {
-            Atmosphere.leaveTo("dashboard.html");
-            resolve();
-          }, 900);
-        },
-        { once: true }
-      );
-      stage.ouija.spell(phrase, { dwell: 300 });
-      setTimeout(() => {
-        Atmosphere.leaveTo("dashboard.html");
-        resolve();
-      }, 12000);
+      let done = false;
+      const go = () => {
+        if (done) return;
+        done = true;
+        finish().then(resolve);
+      };
+
+      stage.addEventListener("ouija:spell-end", () => setTimeout(go, 500), { once: true });
+      stage.ouija.spell(phrase, { dwell: 260 });
+      setTimeout(go, 4500);
     });
   }
 

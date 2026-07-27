@@ -15,6 +15,17 @@
       (user.teamSigil || "") + " " + user.username + " · " + (user.score || 0) + " pts";
 
     challenges = await Vault.challenges();
+    const solved = challenges.filter((c) => c.solved).length;
+    const eyebrow = document.getElementById("trialsEyebrow");
+    if (eyebrow) {
+      eyebrow.textContent =
+        challenges.length +
+        " flags open · " +
+        solved +
+        " claimed by you · " +
+        new Set(challenges.map((c) => c.category)).size +
+        " disciplines";
+    }
     paint();
 
     document.getElementById("filters").addEventListener("click", (e) => {

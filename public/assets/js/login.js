@@ -57,12 +57,25 @@
       const user = await Vault.login({
         identifier: els.identifier.value.trim(),
         password: els.password.value,
-        remember: els.remember.checked,
+        remember: !!(els.remember && els.remember.checked),
       });
-      Atmosphere.toast(`The board opens for ${user.username}.`, "success", 2000);
-      setTimeout(() => Atmosphere.leaveTo(next), 420);
+
+      /* First challenge: fullscreen transmission with sound, then the table */
+      if (window.FirstRite) {
+        FirstRite.reset();
+        await FirstRite.play({
+          force: true,
+          onDone() {
+            Vault.go(next, { instant: true });
+          },
+        });
+        return;
+      }
+
+      Vault.go(next, { instant: true });
     } catch (err) {
-      AuthUI.busy(els.submit, false, "Open the board");
+      AuthUI.busy(els.submit, false);
+      els.submit.textContent = "Open the board";
       els.password.value = "";
       if (err && err.field) {
         AuthUI.setError(err.field, err.message);
@@ -75,14 +88,19 @@
     }
   }
 
-  document.querySelector("[data-forgot]").addEventListener("click", (e) => {
-    e.preventDefault();
-    Atmosphere.toast(
-      "The dead keep no recovery records. Ask an organiser to reseat you.",
-      "error",
-      5000
-    );
-  });
+  const forgot = document.querySelector("[data-forgot]");
+  if (forgot) {
+    forgot.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (window.Atmosphere) {
+        Atmosphere.toast(
+          "The dead keep no recovery records. Ask an organiser to reseat you.",
+          "error",
+          5000
+        );
+      }
+    });
+  }
 
   async function boot() {
     if (await Vault.redirectIfAuthed(next)) return;

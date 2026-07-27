@@ -145,23 +145,23 @@
       <a class="btn btn--lg" href="login.html">Return to the table</a>
     </div>
 
-    <!-- Vitals -->
+    <!-- Vitals (live from MongoDB) -->
     <dl class="vitals" data-reveal style="--reveal-delay:940ms">
       <div class="vitals__item">
+        <dt>Flags</dt>
+        <dd class="gilt" data-stat="challenges">—</dd>
+      </div>
+      <div class="vitals__item">
         <dt>Trials</dt>
-        <dd class="gilt" data-count-to="24">0</dd>
+        <dd class="gilt" data-stat="categories">—</dd>
       </div>
       <div class="vitals__item">
-        <dt>Categories</dt>
-        <dd class="gilt" data-count-to="6">0</dd>
+        <dt>Mediums</dt>
+        <dd class="gilt" data-stat="mediums">—</dd>
       </div>
       <div class="vitals__item">
-        <dt>Hours open</dt>
-        <dd class="gilt" data-count-to="48">0</dd>
-      </div>
-      <div class="vitals__item">
-        <dt>Circles seated</dt>
-        <dd class="gilt" data-circles>0</dd>
+        <dt>Circles</dt>
+        <dd class="gilt" data-stat="circles">—</dd>
       </div>
     </dl>
   </div>
@@ -230,74 +230,15 @@
 <section class="section" id="trials">
   <div class="wrap">
     <header class="section__head">
-      <p class="eyebrow" data-reveal>Six trials</p>
+      <p class="eyebrow" data-reveal data-trials-eyebrow>Loading trials…</p>
       <h2 data-reveal style="--reveal-delay:80ms">What waits beyond the veil</h2>
-      <p class="lead center" data-reveal style="--reveal-delay:160ms">
-        Twenty-four flags across six disciplines. Points rise as the
-        room gets colder.
+      <p class="lead center" data-reveal style="--reveal-delay:160ms" data-trials-lead>
+        Live catalogue from the board. Points rise as the room gets colder.
       </p>
     </header>
 
-    <div class="grid grid--3 trials">
-      <article class="card trial" data-reveal>
-        <header class="trial__head">
-          <span class="trial__num">I</span>
-          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">The Whispering Wall</h3>
-        <p class="card__text">Web exploitation. The house has a servant's entrance and nobody remembered to lock it.</p>
-        <footer class="trial__foot"><span>Web</span><span>100–400 pts</span></footer>
-      </article>
-
-      <article class="card trial" data-reveal style="--reveal-delay:90ms">
-        <header class="trial__head">
-          <span class="trial__num">II</span>
-          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">Cipher of the Silent Choir</h3>
-        <p class="card__text">Cryptography. Thirteen nuns took a vow. Their letters still arrive, and still refuse to be read.</p>
-        <footer class="trial__foot"><span>Crypto</span><span>150–500 pts</span></footer>
-      </article>
-
-      <article class="card trial" data-reveal style="--reveal-delay:180ms">
-        <header class="trial__head">
-          <span class="trial__num">III</span>
-          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">Photographs of the Deceased</h3>
-        <p class="card__text">Forensics. Every plate in the album has something behind the emulsion. Look with the right eyes.</p>
-        <footer class="trial__foot"><span>Forensics</span><span>100–450 pts</span></footer>
-      </article>
-
-      <article class="card trial" data-reveal style="--reveal-delay:270ms">
-        <header class="trial__head">
-          <span class="trial__num">IV</span>
-          <span class="badge badge--brass"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">The Planchette's Grain</h3>
-        <p class="card__text">Reverse engineering. Someone carved instructions into the wood. Follow them backwards.</p>
-        <footer class="trial__foot"><span>Reversing</span><span>200–600 pts</span></footer>
-      </article>
-
-      <article class="card trial" data-reveal style="--reveal-delay:360ms">
-        <header class="trial__head">
-          <span class="trial__num">V</span>
-          <span class="badge badge--brass"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">Ectoplasm</h3>
-        <p class="card__text">Binary exploitation. Something is leaking out of the medium, and it is writing past the end of her.</p>
-        <footer class="trial__foot"><span>Pwn</span><span>250–700 pts</span></footer>
-      </article>
-
-      <article class="card trial" data-reveal style="--reveal-delay:450ms">
-        <header class="trial__head">
-          <span class="trial__num">VI</span>
-          <span class="badge badge--ember"><i class="badge__dot"></i>4 flags</span>
-        </header>
-        <h3 class="card__title">Do Not Say Its Name</h3>
-        <p class="card__text">Miscellaneous &amp; OSINT. The last trial has no category, no hints, and no record of who set it.</p>
-        <footer class="trial__foot"><span>Misc</span><span>300–800 pts</span></footer>
-      </article>
+    <div class="grid grid--3 trials" id="trialsGrid">
+      <p class="typewriter-note">Asking the house for the open trials…</p>
     </div>
   </div>
 </section>

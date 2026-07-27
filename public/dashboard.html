@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="assets/css/board.css">
 <link rel="stylesheet" href="assets/css/home.css">
 <link rel="stylesheet" href="assets/css/dashboard.css">
+<link rel="stylesheet" href="assets/css/rite.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -68,6 +69,10 @@
         <span class="stat__label">Circle</span>
         <strong class="stat__value" id="userCircle">—</strong>
       </div>
+      <div class="stat">
+        <span class="stat__label">Visits</span>
+        <strong class="stat__value gilt" id="userLogins">0</strong>
+      </div>
     </div>
 
     <div class="dash__grid">
@@ -98,6 +103,9 @@
             <h2 class="dash__side-title" id="nextTitle">Loading…</h2>
             <p class="muted" id="nextDesc"></p>
             <a class="btn btn--spectral btn--block" href="challenges.html" id="nextLink">Begin</a>
+            <button class="btn btn--ghost btn--block" type="button" id="replayRite">
+              Replay first transmission
+            </button>
           </div>
         </section>
         <section class="panel">
@@ -126,6 +134,7 @@
 <script src="assets/js/vault.js"></script>
 <script src="assets/js/atmosphere.js"></script>
 <script src="assets/js/board.js"></script>
+<script src="assets/js/first-rite.js"></script>
 <script src="assets/js/dashboard.js"></script>
 </body>
 </html>

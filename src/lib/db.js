@@ -59,6 +59,10 @@ function getDb() {
   return db;
 }
 
+function isConnected() {
+  return !!db;
+}
+
 function mongoUrl() {
   return resolveUri();
 }
@@ -71,4 +75,4 @@ async function close() {
   }
 }
 
-module.exports = { connect, getDb, mongoUrl, close };
+module.exports = { connect, getDb, mongoUrl, close, isConnected };

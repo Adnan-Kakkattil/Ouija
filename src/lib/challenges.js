@@ -14,8 +14,8 @@ const challenges = [
     points: 100,
     difficulty: "easy",
     description:
-      "The house has a servant's door that was never locked. Look at the page source of the landing séance — something stencilled in the comments still listens.",
-    hint: "View the HTML of the home page. The dead leave notes in <!-- comments -->.",
+      "When you entered, the house played its first transmission. That was only the knock. The servant's door is still unlocked — look at the page source of the landing séance. Something stencilled in the comments still listens.",
+    hint: "View the HTML of the home page. The dead leave notes in <!-- comments -->. Replay the transmission from The Table if you need to hear it again.",
     correctFlag: "ouija{first_knock_answered}",
   },
   {
@@ -130,4 +130,25 @@ function findChallenge(id) {
   return challenges.find((c) => c.id === id) || null;
 }
 
-module.exports = { challenges, publicChallenge, findChallenge };
+function trialSummary(list) {
+  const map = new Map();
+  for (const c of list) {
+    if (!map.has(c.trial)) {
+      map.set(c.trial, {
+        trial: c.trial,
+        roman: c.roman,
+        category: c.category,
+        flags: 0,
+        minPoints: c.points,
+        maxPoints: c.points,
+      });
+    }
+    const row = map.get(c.trial);
+    row.flags += 1;
+    row.minPoints = Math.min(row.minPoints, c.points);
+    row.maxPoints = Math.max(row.maxPoints, c.points);
+  }
+  return [...map.values()];
+}
+
+module.exports = { challenges, publicChallenge, findChallenge, trialSummary };

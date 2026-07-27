@@ -1,0 +1,113 @@
+/* =========================================================
+   First transmission — fullscreen login rite
+   ========================================================= */
+
+.rite {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #000;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--ease-out, ease);
+}
+
+.rite.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.rite.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rite__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.rite.is-playing .rite__video {
+  object-fit: cover;
+}
+
+.rite__veil,
+.rite__end {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4, 1rem);
+  max-width: 36rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  text-align: center;
+  background: radial-gradient(ellipse at center, rgba(8, 6, 12, 0.72) 0%, rgba(0, 0, 0, 0.55) 70%);
+}
+
+.rite__veil[hidden],
+.rite__end[hidden],
+.rite__chrome[hidden] {
+  display: none !important;
+}
+
+.rite__title {
+  font-family: var(--font-display, Cinzel, serif);
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  color: var(--parchment-100, #f4ecd8);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.rite__lede {
+  color: var(--parchment-400, #c4b394);
+  font-size: var(--fs-md, 1.05rem);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.rite__chrome {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 3vw, 2rem) 1.25rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+}
+
+.rite__label {
+  font-family: var(--font-type, "Special Elite", monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 236, 216, 0.7);
+  margin: 0;
+}
+
+.rite__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* When browser grants native fullscreen, keep chrome visible */
+.rite:fullscreen,
+.rite:-webkit-full-screen {
+  background: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rite {
+    transition: none;
+  }
+}

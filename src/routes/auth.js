@@ -44,6 +44,32 @@ async function requireAuth(req, res, next) {
   }
 }
 
+async function optionalAuth(req, res, next) {
+  try {
+    req.user = null;
+    if (req.session && req.session.userId) {
+      req.user = await store.findUserById(req.session.userId);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+function saveSession(req, userId, maxAge) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((regenErr) => {
+      if (regenErr) return reject(regenErr);
+      req.session.userId = userId;
+      req.session.cookie.maxAge = maxAge;
+      req.session.save((saveErr) => {
+        if (saveErr) return reject(saveErr);
+        resolve();
+      });
+    });
+  });
+}
+
 router.get("/teams", async (_req, res, next) => {
   try {
     res.json({ ok: true, teams: await store.teamsWithCounts() });
@@ -165,16 +191,8 @@ router.post("/signup", async (req, res) => {
     await store.setTeamFounder(teamId, user.id);
     await store.recordLogin(user.id, clientMeta(req, false));
 
-    req.session.userId = user.id;
-    req.session.cookie.maxAge = 12 * 60 * 60 * 1000;
-
-    req.session.save(async (err) => {
-      if (err) {
-        console.error("[signup] session save", err);
-        return res.status(500).json({ ok: false, message: "The board refused. Try once more." });
-      }
-      res.status(201).json({ ok: true, user: await store.publicUser(user) });
-    });
+    await saveSession(req, user.id, 12 * 60 * 60 * 1000);
+    res.status(201).json({ ok: true, user: await store.publicUser(user) });
   } catch (err) {
     if (err.field) return fail(res, err.status || 400, err.field, err.message);
     console.error("[signup]", err);
@@ -204,17 +222,11 @@ router.post("/login", async (req, res) => {
 
     await store.recordLogin(user.id, clientMeta(req, remember));
 
-    req.session.userId = user.id;
-    req.session.cookie.maxAge = remember ? 30 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    const maxAge = remember ? 30 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    await saveSession(req, user.id, maxAge);
 
-    req.session.save(async (err) => {
-      if (err) {
-        console.error("[login] session save", err);
-        return res.status(500).json({ ok: false, message: "The board stayed shut." });
-      }
-      const fresh = await store.findUserById(user.id);
-      res.json({ ok: true, user: await store.publicUser(fresh || user) });
-    });
+    const fresh = await store.findUserById(user.id);
+    res.json({ ok: true, user: await store.publicUser(fresh || user) });
   } catch (err) {
     console.error("[login]", err);
     res.status(500).json({ ok: false, message: "The board stayed shut." });
@@ -230,18 +242,21 @@ router.post("/logout", (req, res) => {
 
 router.get("/stats", async (_req, res, next) => {
   try {
+    const { challenges, trialSummary } = require("../lib/challenges");
     const stats = await store.stats();
+    const trials = trialSummary(challenges);
     res.json({
       ok: true,
       circles: stats.circles,
       mediums: stats.mediums,
       solves: stats.solveCount,
-      challenges: 8,
-      categories: 6,
+      challenges: challenges.length,
+      categories: trials.length,
+      trials,
     });
   } catch (err) {
     next(err);
   }
 });
 
-module.exports = { router, requireAuth };
+module.exports = { router, requireAuth, optionalAuth };

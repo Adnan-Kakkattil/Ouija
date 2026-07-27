@@ -20,7 +20,16 @@
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(opts.body);
     }
-    const res = await fetch(path, opts);
+
+    let res;
+    try {
+      res = await fetch(path, opts);
+    } catch {
+      const err = new Error("Could not reach the board. Is the server running?");
+      err.status = 0;
+      throw err;
+    }
+
     let data = null;
     try {
       data = await res.json();
@@ -41,6 +50,20 @@
 
   const Vault = {
     RULES,
+
+    go(url, opts) {
+      const href = url || "dashboard.html";
+      const useVeil = !(opts && opts.instant) && window.Atmosphere && typeof Atmosphere.leaveTo === "function";
+      if (useVeil) {
+        try {
+          Atmosphere.leaveTo(href);
+          return;
+        } catch (_) {
+          /* fall through */
+        }
+      }
+      location.assign(href);
+    },
 
     async listTeams() {
       const data = await api("/api/auth/teams");
@@ -72,18 +95,24 @@
     },
 
     async leaderboard() {
-      const data = await api("/api/auth/leaderboard");
-      return data;
+      return api("/api/auth/leaderboard");
     },
 
     async stats() {
-      const data = await api("/api/auth/stats");
-      return data;
+      return api("/api/auth/stats");
     },
 
     async challenges() {
       const data = await api("/api/challenges");
       return data.challenges || [];
+    },
+
+    async catalogue() {
+      const data = await api("/api/challenges");
+      return {
+        challenges: data.challenges || [],
+        trials: data.trials || [],
+      };
     },
 
     async submitFlag(id, flag) {
@@ -96,8 +125,9 @@
     async requireAuth(redirectTo) {
       const user = await this.currentUser(true);
       if (!user) {
-        const back = encodeURIComponent(location.pathname.split("/").pop() || "");
-        location.replace((redirectTo || "login.html") + (back ? "?next=" + back : ""));
+        const page = location.pathname.split("/").pop() || "dashboard.html";
+        const back = encodeURIComponent(page);
+        location.replace((redirectTo || "login.html") + "?next=" + back);
         return null;
       }
       return user;

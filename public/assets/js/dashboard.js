@@ -1,4 +1,4 @@
-/* Dashboard behaviour */
+/* Dashboard behaviour — live user progress from MongoDB */
 
 (function () {
   "use strict";
@@ -15,21 +15,36 @@
     const user = await Vault.requireAuth("login.html");
     if (!user) return;
 
+    paintUser(user);
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await Vault.logout();
+      } catch (_) {
+        /* still leave */
+      }
+      Vault.go("index.html");
+    });
+
+    wireBoard();
+    document.getElementById("replayRite").addEventListener("click", () => {
+      if (!window.FirstRite) return;
+      FirstRite.play({ force: true });
+    });
+    await Promise.all([loadNext(user), loadLadder()]);
+  }
+
+  function paintUser(user) {
     document.getElementById("userName").textContent = user.username;
     document.getElementById("userTeam").textContent =
       user.teamSigil + "  " + user.teamName + " — rest your hands on the planchette.";
     document.getElementById("userScore").textContent = String(user.score || 0);
-    document.getElementById("userSolved").textContent = String((user.solved || []).length);
+    document.getElementById("userSolved").textContent = String(
+      (user.solved && user.solved.length) || user.solvedCount || 0
+    );
     document.getElementById("userCircle").textContent = user.teamName;
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await Vault.logout();
-      Atmosphere.leaveTo("index.html");
-    });
-
-    wireBoard();
-    await loadNext(user);
-    await loadLadder();
+    const logins = document.getElementById("userLogins");
+    if (logins) logins.textContent = String(user.loginCount || 0);
   }
 
   function wireBoard() {
@@ -62,11 +77,27 @@
     try {
       const list = await Vault.challenges();
       const next = list.find((c) => !c.solved) || list[0];
-      if (!next) return;
-      document.getElementById("nextTitle").textContent = next.title;
-      document.getElementById("nextDesc").textContent =
-        next.trial + " · " + next.points + " pts · " + next.difficulty;
+      if (!next) {
+        document.getElementById("nextTitle").textContent = "All quiet";
+        document.getElementById("nextDesc").textContent = "No trials are open.";
+        return;
+      }
+      const remaining = list.filter((c) => !c.solved).length;
+      document.getElementById("nextTitle").textContent = next.solved
+        ? "All flags claimed"
+        : next.title;
+      document.getElementById("nextDesc").textContent = next.solved
+        ? "Your circle has finished every open trial."
+        : next.trial +
+          " · " +
+          next.points +
+          " pts · " +
+          next.difficulty +
+          " · " +
+          remaining +
+          " left";
       document.getElementById("nextLink").href = "challenges.html#" + next.id;
+      document.getElementById("nextLink").textContent = next.solved ? "Review trials" : "Begin";
     } catch (err) {
       document.getElementById("nextTitle").textContent = "The trials are sealed";
       document.getElementById("nextDesc").textContent = err.message || "Could not load challenges.";
@@ -78,7 +109,11 @@
     try {
       const data = await Vault.leaderboard();
       const rows = data.rows || [];
-      if (!rows.length) return;
+      if (!rows.length) {
+        list.innerHTML =
+          '<li class="ladder__empty"><p class="typewriter-note">The board is cold.</p></li>';
+        return;
+      }
       list.innerHTML = rows
         .slice(0, 5)
         .map(
@@ -87,7 +122,9 @@
           <span class="ladder__rank">${String(i + 1).padStart(2, "0")}</span>
           <span>
             <span class="ladder__name">${escapeHtml(t.name)}</span>
-            <span class="ladder__meta">${t.score} pts</span>
+            <span class="ladder__meta">${t.members} medium${t.members === 1 ? "" : "s"} · ${
+            t.solved
+          } flags</span>
           </span>
           <span class="ladder__score">${t.score}</span>
         </li>`
@@ -106,6 +143,6 @@
 
   boot().catch((err) => {
     console.error(err);
-    Atmosphere.toast("Could not open the table.", "error");
+    if (window.Atmosphere) Atmosphere.toast("Could not open the table.", "error");
   });
 })();
