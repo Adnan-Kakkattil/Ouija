@@ -71,6 +71,137 @@
   margin: var(--sp-2) 0;
 }
 
+/* ---------------- Mansion rooms on the table ---------------- */
+
+.rooms {
+  margin-bottom: var(--sp-7);
+}
+
+.rooms__head {
+  margin-bottom: var(--sp-5);
+  max-width: 52ch;
+}
+
+.rooms__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  margin: var(--sp-2) 0;
+  color: var(--text-bright);
+}
+
+.rooms__lede {
+  margin: 0;
+}
+
+.rooms__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+@media (max-width: 960px) {
+  .rooms__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.room-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(88, 60, 28, 0.18), transparent 55%),
+    var(--surface);
+  min-height: 100%;
+}
+
+.room-card.is-current {
+  border-color: rgba(217, 169, 74, 0.45);
+  box-shadow: 0 0 0 1px rgba(217, 169, 74, 0.12) inset;
+}
+
+.room-card.is-cleared {
+  border-color: rgba(127, 212, 193, 0.28);
+}
+
+.room-card.is-locked {
+  opacity: 0.72;
+  filter: saturate(0.75);
+}
+
+.room-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.room-card__pts {
+  font-family: var(--font-type);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--brass-400);
+}
+
+.room-card__num {
+  margin: 0;
+  font-family: var(--font-type);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--parchment-500);
+}
+
+.room-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  color: var(--parchment-100);
+  line-height: 1.2;
+}
+
+.room-card__lede {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.room-card__progress {
+  height: 4px;
+  background: rgba(244, 236, 216, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-card__progress > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--brass-600), var(--brass-300));
+}
+
+.room-card.is-cleared .room-card__progress > span {
+  background: linear-gradient(90deg, var(--spectre-600), var(--spectre-400));
+}
+
+.room-card__meta {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--parchment-500);
+}
+
+.room-hero .room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
 .ladder--compact li {
   padding: var(--sp-3) var(--sp-1);
   grid-template-columns: 2.4ch 1fr auto;

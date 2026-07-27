@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chamber — OUIJA CTF</title>
+<meta name="theme-color" content="#040306">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header is-stuck">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+      <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+        <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+      </svg>
+      <span>
+        <span class="brand__name">OUIJA</span>
+        <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+      </span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a class="nav__link" href="dashboard.html">The Table</a>
+      <a class="nav__link" href="challenges.html">Trials</a>
+      <span class="nav__actions">
+        <span class="whoami__chip" id="headerChip">…</span>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="dash">
+  <div class="wrap">
+    <header class="dash__hero room-hero">
+      <p class="eyebrow" id="roomEyebrow">Chamber</p>
+      <h1 class="dash__title" id="roomTitle">Loading…</h1>
+      <p class="lead" id="roomLede"></p>
+      <p class="muted" id="roomMeta"></p>
+      <div class="room-actions" id="roomActions"></div>
+    </header>
+
+    <div class="challenge-grid" id="roomChallengeGrid">
+      <p class="typewriter-note">Listening for objects in the room…</p>
+    </div>
+  </div>
+</main>
+
+<dialog class="challenge-modal" id="challengeModal">
+  <form method="dialog" class="challenge-modal__inner panel">
+    <div class="panel__body stack">
+      <header>
+        <p class="eyebrow" id="modalTrial">Trial</p>
+        <h2 id="modalTitle">Title</h2>
+        <p class="muted" id="modalMeta"></p>
+      </header>
+      <p id="modalDesc"></p>
+      <div class="artifact-box" id="artifactBox" hidden>
+        <a class="btn btn--spectral btn--sm" id="artifactLink" href="#" target="_blank" rel="noopener">
+          Download evidence
+        </a>
+        <p class="muted artifact-box__note" id="artifactNote">Save a copy of the evidence for your circle.</p>
+      </div>
+      <div class="hint" id="hintBox">
+        <button class="btn btn--spectral btn--sm" type="button" id="unlockHintBtn">
+          Ask for a hint
+        </button>
+        <p id="modalHint" class="typewriter-note" hidden></p>
+        <p id="hintCostNote" class="muted"></p>
+      </div>
+      <div class="field" data-field="flag">
+        <label class="field__label" for="flagInput"><span>Offer a flag</span></label>
+        <div class="field__shell">
+          <input class="field__input" id="flagInput" name="flag" type="text" placeholder="flag{...} or ouija{...}" autocomplete="off" spellcheck="false">
+        </div>
+        <p class="field__error" id="flagError" role="alert"></p>
+      </div>
+      <div class="auth__between">
+        <button class="btn btn--ghost" type="submit" value="cancel">Close</button>
+        <button class="btn btn--primary" type="button" id="submitFlag">Submit offering</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script src="assets/js/vault.js"></script>
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/room.js"></script>
+</body>
+</html>

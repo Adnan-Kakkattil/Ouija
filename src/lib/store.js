@@ -301,26 +301,39 @@ const store = {
   /* Remember which trial the medium last opened (survives logout/relogin) */
   async setLastChallenge(userId, challengeId) {
     if (!userId || !challengeId) return null;
+    const { findChallenge } = require("./challenges");
+    const c = findChallenge(challengeId);
+    const patch = { lastChallengeId: challengeId, lastChallengeAt: Date.now() };
+    if (c && c.roomId) patch.lastRoomId = c.roomId;
+    await users().updateOne({ id: userId }, { $set: patch });
+    return this.findUserById(userId);
+  },
+
+  async setLastRoom(userId, roomId) {
+    if (!userId || !roomId) return null;
     await users().updateOne(
       { id: userId },
-      { $set: { lastChallengeId: challengeId, lastChallengeAt: Date.now() } }
+      { $set: { lastRoomId: roomId, lastRoomAt: Date.now() } }
     );
     return this.findUserById(userId);
   },
 
-  /* After a solve, park on the next unsolved trial (or the one just claimed) */
+  /* After a solve, park on the next unsolved trial (prefer same room) */
   async advanceProgress(userId, justSolvedId) {
-    const { challenges } = require("./challenges");
+    const { nextChallengeAfter } = require("./challenges");
     const userSolves = await this.listSolvesForUser(userId);
     const done = new Set(userSolves.map((s) => s.challengeId));
     if (justSolvedId) done.add(justSolvedId);
-    const next = challenges.find((c) => !done.has(c.id));
+    const next = nextChallengeAfter(justSolvedId, done);
     const lastChallengeId = next ? next.id : justSolvedId || null;
     if (!lastChallengeId) return null;
     return this.setLastChallenge(userId, lastChallengeId);
   },
 
   resumePath(user) {
+    if (user && user.lastRoomId) {
+      return "room.html#" + user.lastRoomId;
+    }
     if (user && user.lastChallengeId) {
       return "challenges.html#" + user.lastChallengeId;
     }
@@ -483,6 +496,8 @@ const store = {
       lastLoginAt: user.lastLoginAt || null,
       lastChallengeId: user.lastChallengeId || null,
       lastChallengeAt: user.lastChallengeAt || null,
+      lastRoomId: user.lastRoomId || null,
+      lastRoomAt: user.lastRoomAt || null,
       storySeen: !!user.storySeenAt,
       storySeenAt: user.storySeenAt || null,
       resumePath: this.resumePath(user),

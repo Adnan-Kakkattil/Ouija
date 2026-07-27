@@ -40,6 +40,7 @@ const { connect, mongoUrl, isConnected } = require("./src/lib/db");
 const store = require("./src/lib/store");
 const auth = require("./src/routes/auth");
 const challenges = require("./src/routes/challenges");
+const rooms = require("./src/routes/rooms");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -114,6 +115,7 @@ function mountApp(sessionStore) {
 
   app.use("/api/auth", auth.router);
   app.use("/api/challenges", challenges);
+  app.use("/api/rooms", rooms);
 
   app.use(
     express.static(PUBLIC_DIR, {

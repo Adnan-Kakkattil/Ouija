@@ -1,11 +1,11 @@
-/* Dashboard behaviour — live user progress from MongoDB */
+/* Dashboard behaviour — rooms + live progress from MongoDB */
 
 (function () {
   "use strict";
 
   const ANSWERS = {
     GOODBYE: "GOODBYE",
-    "WHERE IS THE FLAG": "OPEN THE TRIALS",
+    "WHERE IS THE FLAG": "OPEN THE ROOMS",
   };
 
   let goodbyeCount = 0;
@@ -15,9 +15,7 @@
     const user = await Vault.requireAuth("login.html");
     if (!user) return;
 
-    /* Resume unfinished Trial I gate if the first key is still unclaimed */
     const gated = await Vault.playIntro(user, () => {
-      /* stay on the table after offering the key */
       location.reload();
     });
     if (gated) return;
@@ -38,7 +36,7 @@
       if (!window.FirstRite) return;
       FirstRite.play({ force: true });
     });
-    await Promise.all([loadNext(user), loadLadder(), loadLedger(user)]);
+    await Promise.all([loadRooms(user), loadLadder(), loadLedger(user)]);
   }
 
   function paintUser(user) {
@@ -87,46 +85,111 @@
     });
   }
 
-  async function loadNext(user) {
+  function statusLabel(room) {
+    if (room.status === "sealed") return "Sealed";
+    if (room.status === "locked") return "Locked";
+    if (room.status === "cleared") return "Cleared";
+    if (room.status === "in_progress") return "In progress";
+    return "Open";
+  }
+
+  function actionLabel(room) {
+    if (room.action === "start") return "Start room";
+    if (room.action === "continue") return "Continue";
+    if (room.action === "restart") return "Enter again";
+    if (room.action === "sealed") return "Not yet open";
+    return "Locked";
+  }
+
+  function paintRooms(rooms) {
+    const grid = document.getElementById("roomsGrid");
+    if (!grid) return;
+    if (!rooms.length) {
+      grid.innerHTML = '<p class="typewriter-note">No chambers answer.</p>';
+      return;
+    }
+
+    grid.innerHTML = rooms
+      .map((r) => {
+        const locked = r.status === "locked" || r.status === "sealed";
+        const pct = r.totalChallenges
+          ? Math.round((r.solvedChallenges / r.totalChallenges) * 100)
+          : 0;
+        return `
+        <article class="room-card ${locked ? "is-locked" : ""} ${r.status === "cleared" ? "is-cleared" : ""} ${
+          r.isCurrent ? "is-current" : ""
+        }" data-room="${escapeHtml(r.id)}">
+          <div class="room-card__top">
+            <span class="badge ${
+              locked
+                ? "badge--ember"
+                : r.status === "cleared"
+                  ? "badge--spectre"
+                  : "badge--brass"
+            }">${statusLabel(r)}</span>
+            <span class="room-card__pts">${r.pointsPerChallenge} pts / flag</span>
+          </div>
+          <p class="room-card__num">Room ${r.number}</p>
+          <h3 class="room-card__title">${escapeHtml(r.title)}</h3>
+          <p class="room-card__lede">${escapeHtml(r.lede)}</p>
+          <div class="room-card__progress" aria-hidden="true">
+            <span style="width:${pct}%"></span>
+          </div>
+          <p class="room-card__meta">
+            ${r.sealed ? "Awaiting the house" : r.solvedChallenges + " / " + r.totalChallenges + " challenges"}
+            · ${r.earnedPoints} / ${r.totalPoints} pts
+          </p>
+          ${
+            locked
+              ? `<button class="btn btn--ghost btn--block" type="button" disabled>${actionLabel(r)}</button>`
+              : `<a class="btn btn--primary btn--block" href="${escapeHtml(r.href)}">${actionLabel(r)}</a>`
+          }
+        </article>`;
+      })
+      .join("");
+
+    const focus =
+      rooms.find((r) => r.isCurrent && r.unlocked && !r.sealed) ||
+      rooms.find((r) => r.unlocked && r.status === "in_progress") ||
+      rooms.find((r) => r.unlocked && r.status === "open") ||
+      rooms.find((r) => r.unlocked && !r.sealed) ||
+      null;
+
+    const nextTitle = document.getElementById("nextTitle");
+    const nextDesc = document.getElementById("nextDesc");
+    const nextLink = document.getElementById("nextLink");
+    if (!focus) {
+      nextTitle.textContent = "Doors sealed";
+      nextDesc.textContent = "Offer the first key, or wait for the house to open deeper chambers.";
+      nextLink.href = "dashboard.html";
+      nextLink.textContent = "Stay at the table";
+      return;
+    }
+    nextTitle.textContent = "Room " + focus.number + " · " + focus.title;
+    nextDesc.textContent =
+      focus.solvedChallenges +
+      "/" +
+      focus.totalChallenges +
+      " cleared · " +
+      focus.pointsPerChallenge +
+      " pts each";
+    nextLink.href = focus.href;
+    nextLink.textContent = actionLabel(focus);
+  }
+
+  async function loadRooms() {
     try {
-      const list = await Vault.challenges();
-      const resumeId = user.lastChallengeId;
-      const resume = resumeId && list.find((c) => c.id === resumeId);
-      const nextUnsolved = list.find((c) => !c.solved);
-      const focus = (resume && !resume.solved ? resume : null) || nextUnsolved || resume || list[0];
-
-      if (!focus) {
-        document.getElementById("nextTitle").textContent = "All quiet";
-        document.getElementById("nextDesc").textContent = "No trials are open.";
-        return;
-      }
-
-      const remaining = list.filter((c) => !c.solved).length;
-      const isResume = !!(resume && focus.id === resume.id);
-
-      document.getElementById("nextTitle").textContent = focus.solved
-        ? "All flags claimed"
-        : focus.title;
-      document.getElementById("nextDesc").textContent = focus.solved
-        ? "Your circle has finished every open trial."
-        : (isResume ? "Resume · " : "") +
-          focus.trial +
-          " · " +
-          focus.points +
-          " pts · " +
-          focus.difficulty +
-          " · " +
-          remaining +
-          " left";
-      document.getElementById("nextLink").href = "challenges.html#" + focus.id;
-      document.getElementById("nextLink").textContent = focus.solved
-        ? "Review trials"
-        : isResume
-          ? "Resume trial"
-          : "Begin";
+      const data = await Vault.rooms();
+      paintRooms(data.rooms || []);
+      if (data.user) paintUser(data.user);
     } catch (err) {
-      document.getElementById("nextTitle").textContent = "The trials are sealed";
-      document.getElementById("nextDesc").textContent = err.message || "Could not load challenges.";
+      const grid = document.getElementById("roomsGrid");
+      if (grid) {
+        grid.innerHTML =
+          '<p class="typewriter-note">' +
+          escapeHtml(err.message || "Could not read the doors.") +
+          "</p>";
+      }
     }
   }
 
@@ -137,10 +200,7 @@
 
     if (totalsEl) {
       totalsEl.textContent =
-        "Gained +" +
-        (totals.earned || 0) +
-        " · Spent −" +
-        (totals.spent || 0);
+        "Gained +" + (totals.earned || 0) + " · Spent −" + (totals.spent || 0);
     }
 
     const rows = entries || [];
@@ -155,11 +215,7 @@
       .map((e) => {
         const plus = e.delta >= 0;
         const label =
-          e.kind === "hint"
-            ? "Hint"
-            : e.kind === "solve"
-              ? "Solve"
-              : e.kind || "Move";
+          e.kind === "hint" ? "Hint" : e.kind === "solve" ? "Solve" : e.kind || "Move";
         const challenge = e.challengeId ? " · " + e.challengeId : "";
         return `
         <li>

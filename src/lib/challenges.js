@@ -3,7 +3,40 @@
 /**
  * Challenge catalogue for OUIJA CTF.
  * Flags are checked server-side only — never send correctFlag to the client.
+ *
+ * Rooms gate mansion exploration. Room N unlocks when Room N-1 is fully cleared
+ * (Room 1 unlocks after the burned-paper key / whisper-1).
  */
+
+const rooms = [
+  {
+    id: "room-1",
+    number: 1,
+    title: "The First Chamber",
+    lede: "Dust, moonlight, and eight objects that remember Olivia.",
+    pointsPerChallenge: 100,
+    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4"],
+  },
+  {
+    id: "room-2",
+    number: 2,
+    title: "The Second Chamber",
+    lede: "Deeper into the house. The air grows colder.",
+    pointsPerChallenge: 200,
+    challengeIds: [],
+    sealed: true,
+  },
+  {
+    id: "room-3",
+    number: 3,
+    title: "The Third Chamber",
+    lede: "The basement she feared. Not yet opened.",
+    pointsPerChallenge: 300,
+    challengeIds: [],
+    sealed: true,
+  },
+];
+
 const challenges = [
   {
     id: "whisper-1",
@@ -21,14 +54,15 @@ const challenges = [
   },
   {
     id: "room1-1",
+    roomId: "room-1",
     category: "crypto",
     trial: "Room I · The First Chamber",
     roman: "I",
     title: "Torn Diary Page",
-    points: 150,
+    points: 100,
     difficulty: "easy",
     description:
-      "An old diary page is found under a rocking chair. Download Olivia’s paper, read what she left behind, and recover the hidden flag. Caesar Cipher.",
+      "An old diary page is found under a rocking chair. Download Olivia’s paper, read what she left behind, and recover the hidden flag.",
     hint: "The alphabet has shifted...",
     correctFlag: "flag{her_name_was_olivia}",
     artifactUrl: "assets/files/ooo.html",
@@ -36,11 +70,12 @@ const challenges = [
   },
   {
     id: "room1-2",
+    roomId: "room-1",
     category: "crypto",
     trial: "Room I · The First Chamber",
     roman: "I",
     title: "Hidden Prayer",
-    points: 150,
+    points: 100,
     difficulty: "easy",
     description:
       "A prayer written on the wall using strange symbols. Download the wall inscription and recover what it conceals.",
@@ -51,11 +86,12 @@ const challenges = [
   },
   {
     id: "room1-3",
+    roomId: "room-1",
     category: "forensics",
     trial: "Room I · The First Chamber",
     roman: "I",
     title: "Locked Wooden Box",
-    points: 200,
+    points: 100,
     difficulty: "easy",
     description:
       "A small wooden box with an old ZIP archive inside. Crack the easy ZIP password and recover what was sealed away.",
@@ -66,11 +102,12 @@ const challenges = [
   },
   {
     id: "room1-4",
+    roomId: "room-1",
     category: "forensics",
     trial: "Room I · The First Chamber",
     roman: "I",
     title: "Family Portrait",
-    points: 200,
+    points: 100,
     difficulty: "medium",
     description:
       "A family photograph hanging crooked on the wall. Something is hidden inside the image — recover the concealed text.",
@@ -172,12 +209,49 @@ const challenges = [
   },
 ];
 
+function hintCost(difficulty) {
+  const d = String(difficulty || "easy").toLowerCase();
+  if (d === "hard") return 30;
+  if (d === "medium") return 20;
+  return 10;
+}
+
+function findChallenge(id) {
+  return challenges.find((c) => c.id === id) || null;
+}
+
+function findRoom(id) {
+  return rooms.find((r) => r.id === id || String(r.number) === String(id)) || null;
+}
+
+function challengesForRoom(roomId) {
+  const room = findRoom(roomId);
+  if (!room) return [];
+  return room.challengeIds.map((id) => findChallenge(id)).filter(Boolean);
+}
+
+function roomComplete(room, solvedSet) {
+  if (!room || !room.challengeIds.length) return false;
+  return room.challengeIds.every((id) => solvedSet.has(id));
+}
+
+function isRoomUnlocked(room, solvedIds) {
+  const solved = new Set(solvedIds || []);
+  if (!room) return false;
+  if (room.sealed && (!room.challengeIds || !room.challengeIds.length)) return false;
+  if (room.number === 1) return solved.has("whisper-1");
+  const prev = rooms.find((r) => r.number === room.number - 1);
+  if (!prev) return false;
+  return roomComplete(prev, solved);
+}
+
 function publicChallenge(c, solvedIds, unlockedHintIds) {
   const unlocked = Array.isArray(unlockedHintIds) && unlockedHintIds.includes(c.id);
   const cost = hintCost(c.difficulty);
   const noHint = !!c.noHint;
   return {
     id: c.id,
+    roomId: c.roomId || null,
     category: c.category,
     trial: c.trial,
     roman: c.roman,
@@ -188,7 +262,6 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
     noHint,
     hintCost: noHint ? 0 : cost,
     hintUnlocked: noHint ? false : unlocked,
-    /* Hint text only after the medium pays — never for no-hint trials */
     hint: noHint ? null : unlocked ? c.hint : null,
     solved: (solvedIds || []).includes(c.id),
     artifactUrl: c.artifactUrl || null,
@@ -196,15 +269,81 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
   };
 }
 
-function hintCost(difficulty) {
-  const d = String(difficulty || "easy").toLowerCase();
-  if (d === "hard") return 30;
-  if (d === "medium") return 20;
-  return 10; /* easy */
+function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
+  const solved = new Set(solvedIds || []);
+  const list = challengesForRoom(room.id);
+  const solvedCount = list.filter((c) => solved.has(c.id)).length;
+  const total = list.length;
+  const unlocked = isRoomUnlocked(room, solvedIds);
+  const complete = roomComplete(room, solved);
+  const firstUnsolved = list.find((c) => !solved.has(c.id));
+  const resume =
+    lastChallengeId && list.some((c) => c.id === lastChallengeId) ? lastChallengeId : null;
+
+  let status = "locked";
+  let action = "locked";
+  if (room.sealed && !total) {
+    status = "sealed";
+    action = "sealed";
+  } else if (!unlocked) {
+    status = "locked";
+    action = "locked";
+  } else if (complete) {
+    status = "cleared";
+    action = "restart";
+  } else if (solvedCount > 0 || resume) {
+    status = "in_progress";
+    action = "continue";
+  } else {
+    status = "open";
+    action = "start";
+  }
+
+  return {
+    id: room.id,
+    number: room.number,
+    title: room.title,
+    lede: room.lede,
+    pointsPerChallenge: room.pointsPerChallenge,
+    totalChallenges: total,
+    solvedChallenges: solvedCount,
+    totalPoints: total * room.pointsPerChallenge,
+    earnedPoints: solvedCount * room.pointsPerChallenge,
+    unlocked,
+    complete,
+    sealed: !!(room.sealed && !total),
+    status,
+    action,
+    isCurrent: lastRoomId === room.id || (!!resume && list.some((c) => c.id === resume)),
+    nextChallengeId: firstUnsolved ? firstUnsolved.id : list[0] ? list[0].id : null,
+    resumeChallengeId: resume && !solved.has(resume) ? resume : firstUnsolved ? firstUnsolved.id : null,
+    href: "room.html#" + room.id,
+  };
 }
 
-function findChallenge(id) {
-  return challenges.find((c) => c.id === id) || null;
+function roomsForUser(solvedIds, lastChallengeId, lastRoomId) {
+  return rooms.map((r) => publicRoom(r, solvedIds, lastChallengeId, lastRoomId));
+}
+
+function nextChallengeAfter(justSolvedId, solvedSet) {
+  const done = solvedSet instanceof Set ? solvedSet : new Set(solvedSet || []);
+  if (justSolvedId) done.add(justSolvedId);
+
+  const current = findChallenge(justSolvedId);
+  if (current && current.roomId) {
+    const room = findRoom(current.roomId);
+    if (room) {
+      for (const id of room.challengeIds) {
+        if (!done.has(id)) return findChallenge(id);
+      }
+      const nextRoom = rooms.find((r) => r.number === room.number + 1);
+      if (nextRoom && isRoomUnlocked(nextRoom, [...done]) && nextRoom.challengeIds[0]) {
+        return findChallenge(nextRoom.challengeIds[0]);
+      }
+    }
+  }
+
+  return challenges.find((c) => !done.has(c.id)) || null;
 }
 
 function trialSummary(list) {
@@ -228,4 +367,18 @@ function trialSummary(list) {
   return [...map.values()];
 }
 
-module.exports = { challenges, publicChallenge, findChallenge, trialSummary, hintCost };
+module.exports = {
+  challenges,
+  rooms,
+  publicChallenge,
+  publicRoom,
+  roomsForUser,
+  findChallenge,
+  findRoom,
+  challengesForRoom,
+  isRoomUnlocked,
+  roomComplete,
+  nextChallengeAfter,
+  trialSummary,
+  hintCost,
+};

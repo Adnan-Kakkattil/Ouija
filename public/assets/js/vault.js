@@ -118,6 +118,24 @@
       };
     },
 
+    async rooms() {
+      const data = await api("/api/rooms");
+      return data;
+    },
+
+    async room(id) {
+      return api("/api/rooms/" + encodeURIComponent(id));
+    },
+
+    async focusRoom(id, mode) {
+      const data = await api("/api/rooms/" + encodeURIComponent(id) + "/focus", {
+        method: "POST",
+        body: { mode: mode || "continue" },
+      });
+      if (data.user) cachedUser = data.user;
+      return data;
+    },
+
     async submitFlag(id, flag) {
       return api("/api/challenges/" + encodeURIComponent(id) + "/submit", {
         method: "POST",
