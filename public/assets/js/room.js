@@ -159,7 +159,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room1-7") {
+      if (c.id === "room1-8") {
+        note.textContent = "Open the archive. Base64 is only the first veil — XOR waits beneath.";
+      } else if (c.id === "room1-7") {
         note.textContent = "Dictionary-attack the ZIP password on the USB archive.";
       } else if (c.id === "room1-6") {
         note.textContent = "Download the WAV. The whisper is hidden inside the audio itself.";

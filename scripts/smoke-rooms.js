@@ -79,7 +79,7 @@ function assert(cond, msg) {
   const r1 = await req("GET", "/api/rooms/room-1", null, ck);
   assert(r1.status === 200, "room1 open");
   const r1body = JSON.parse(r1.body);
-  assert(r1body.challenges.length === 7, "room1 has 7 challenges");
+  assert(r1body.challenges.length === 8, "room1 has 8 challenges");
   assert(r1body.challenges.every((c) => c.points === 100), "room1 challenges 100 pts");
 
   const focus = await req("POST", "/api/rooms/room-1/focus", { mode: "start" }, ck);
@@ -93,6 +93,7 @@ function assert(cond, msg) {
   await req("POST", "/api/challenges/room1-5/submit", { flag: "flag{the_ghost_is_trapped}" }, ck);
   await req("POST", "/api/challenges/room1-6/submit", { flag: "flag{listen_to_the_whispers}" }, ck);
   await req("POST", "/api/challenges/room1-7/submit", { flag: "flag{hidden_truth}" }, ck);
+  await req("POST", "/api/challenges/room1-8/submit", { flag: "flag{forbidden_ritual}" }, ck);
 
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
   assert(rooms[0].complete === true, "room1 cleared");
