@@ -191,17 +191,18 @@ const challenges = [
   {
     id: "room2-1",
     roomId: "room-2",
-    category: "forensics",
+    category: "osint",
     trial: "Room II · Investigation Room",
     roman: "II",
     title: "Torn Newspaper",
     points: 200,
     difficulty: "easy",
-    pending: true,
     description:
-      "A torn newspaper article about the mansion's mysterious disappearances. Evidence for this clue is still being recovered from the desk.",
-    hint: "Evidence for this clue arrives soon.",
-    correctFlag: "flag{room2_pending_newspaper}",
+      "Olivia printed an old newspaper article about the mansion, but the publication name is torn off. Identify the newspaper and use what the clipping still reveals to locate the hidden clue in the parish archives.",
+    hint: "The masthead is gone, but the paper still remembers its name. Search the mansion files for that title.",
+    correctFlag: "ouija{olivia_investigated}",
+    artifactUrl: "assets/files/torn-newspaper.html",
+    artifactLabel: "Download the torn clipping",
   },
   {
     id: "room2-2",

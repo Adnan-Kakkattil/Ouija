@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torn clipping — Blackmoor disappearances</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Special+Elite&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0b0b;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem 1rem 2.5rem;
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.04),transparent 30%),
+    radial-gradient(circle at 75% 60%,rgba(255,255,255,.03),transparent 35%);
+  pointer-events:none;
+}
+.toolbar{
+  position:relative;z-index:2;
+  display:flex;flex-wrap:wrap;gap:.6rem;
+  justify-content:center;margin-bottom:1.25rem;
+}
+.toolbar button,.toolbar a{
+  font-family:"Special Elite", monospace;
+  font-size:.78rem;letter-spacing:.06em;
+  text-transform:uppercase;
+  background:transparent;color:#c9b896;
+  border:1px solid rgba(201,184,150,.35);
+  padding:.55rem .9rem;cursor:pointer;text-decoration:none;
+}
+.toolbar button:hover,.toolbar a:hover{border-color:#e8d7a8;color:#f4ecd8}
+.clip{
+  position:relative;z-index:1;
+  width:min(520px,94vw);
+  background:
+    linear-gradient(180deg,rgba(255,250,235,.97),rgba(236,222,190,.96)),
+    #e8d9b8;
+  color:#1a1510;
+  padding:1.6rem 1.5rem 1.8rem;
+  box-shadow:
+    0 18px 50px rgba(0,0,0,.55),
+    inset 0 0 40px rgba(90,60,20,.08);
+  clip-path:polygon(
+    0% 8%, 4% 0%, 18% 2%, 32% 0%, 48% 3%, 62% 0%, 78% 2%, 92% 0%, 100% 6%,
+    98% 22%, 100% 40%, 97% 58%, 100% 76%, 96% 100%,
+    70% 98%, 52% 100%, 30% 97%, 12% 100%, 0% 92%,
+    2% 70%, 0% 48%, 3% 28%
+  );
+  filter:contrast(1.05) sepia(.12);
+}
+.clip::before{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 17px,rgba(40,30,10,.04) 18px),
+    radial-gradient(circle at 80% 20%,rgba(80,40,10,.12),transparent 40%);
+  pointer-events:none;
+}
+.mast{
+  position:relative;
+  border-bottom:2px solid #2a2118;
+  padding-bottom:.55rem;margin-bottom:.85rem;
+  min-height:2.6rem;
+}
+.mast__torn{
+  font-family:"IM Fell English", serif;
+  font-size:clamp(1.35rem,4.5vw,1.85rem);
+  letter-spacing:.08em;
+  color:#2a2118;
+  opacity:.35;
+  user-select:none;
+}
+.mast__note{
+  font-family:"Special Elite", monospace;
+  font-size:.62rem;
+  color:#6a5640;
+  margin-top:.25rem;
+  letter-spacing:.04em;
+}
+.meta{
+  display:flex;justify-content:space-between;gap:1rem;
+  font-family:"Special Elite", monospace;
+  font-size:.68rem;color:#5a4634;
+  margin-bottom:.9rem;flex-wrap:wrap;
+}
+h1{
+  font-family:"IM Fell English", serif;
+  font-size:clamp(1.15rem,3.5vw,1.45rem);
+  line-height:1.25;margin-bottom:.75rem;
+  color:#1a1510;
+}
+.cols{
+  column-count:2;column-gap:1.1rem;
+  font-size:.78rem;line-height:1.55;
+  text-align:justify;hyphens:auto;
+}
+.cols p{margin-bottom:.7rem}
+.cols p:first-child::first-letter{
+  font-family:"IM Fell English", serif;
+  font-size:2.4em;float:left;line-height:.85;
+  padding-right:.08em;padding-top:.05em;
+}
+.byline{font-style:italic;color:#4a3a2a;margin-bottom:.65rem !important}
+.footer-line{
+  margin-top:1rem;padding-top:.7rem;
+  border-top:1px solid rgba(42,33,24,.35);
+  font-family:"Special Elite", monospace;
+  font-size:.58rem;color:#6a5640;letter-spacing:.03em;
+}
+@media (max-width:520px){
+  .cols{column-count:1}
+}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="dlPng">Save as PNG</button>
+    <a href="torn-newspaper.html" download="torn-newspaper.html">Save HTML</a>
+  </div>
+
+  <article class="clip" id="clip" aria-label="Torn newspaper clipping">
+    <header class="mast">
+      <!-- The masthead once read in full: The Whispering Ledger -->
+      <div class="mast__torn" aria-hidden="true">████████████ LED███</div>
+      <p class="mast__note">[ masthead torn away — publication name missing ]</p>
+    </header>
+    <div class="meta">
+      <span>Vol. XIV · No. 7</span>
+      <span>Blackmoor Parish · 12 October 1978</span>
+      <span>Price 8p</span>
+    </div>
+    <h1>Third disappearance linked to Victorian mansion on Hollow Road</h1>
+    <div class="cols">
+      <p class="byline">From our parish correspondent</p>
+      <p>
+        Constables continue to search the grounds of the abandoned Victorian mansion on Hollow Road
+        after a third resident of Blackmoor Parish was reported missing this autumn. Neighbours
+        speak of lights in the upper windows and a melody heard after midnight, though the house
+        has stood empty since the Blackmoor family left in &rsquo;61.
+      </p>
+      <p>
+        Olivia H., a private researcher recently seen photocopying parish records, told this paper
+        she believed the vanishings were connected. &ldquo;Someone has been living in the lower rooms,&rdquo;
+        she said. &ldquo;The public ledger only prints what it is allowed to print.&rdquo;
+      </p>
+      <p>
+        Parish clerks confirm Miss H. requested microfilm of prior editions concerning Hollow Road.
+        Those reels are held under the paper&rsquo;s own name in the parish archive cabinet —
+        ask for the title that once crowned this page.
+      </p>
+      <p>
+        Anyone with information is asked to write to the editor. Further notices will appear in
+        subsequent numbers of this journal.
+      </p>
+    </div>
+    <p class="footer-line">
+      Microfilm desk · Blackmoor Parish Library · ask for the paper by its true name
+      <!-- OSINT: search the mansion files for whispering-ledger -->
+    </p>
+  </article>
+
+<script>
+(function () {
+  function downloadPng() {
+    var node = document.getElementById("clip");
+    if (!window.html2canvas) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      s.onload = function () { snap(); };
+      document.head.appendChild(s);
+      return;
+    }
+    snap();
+    function snap() {
+      html2canvas(node, { backgroundColor: null, scale: 2 }).then(function (canvas) {
+        var a = document.createElement("a");
+        a.download = "torn-newspaper.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      });
+    }
+  }
+  document.getElementById("dlPng").addEventListener("click", downloadPng);
+})();
+</script>
+</body>
+</html>
