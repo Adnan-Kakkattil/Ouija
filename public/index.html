@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OUIJA CTF — Ask the Dead for the Flag</title>
+<meta name="description" content="OUIJA CTF is a séance-themed capture the flag. Gather your circle, place your hands on the planchette, and let the dead spell out what the living hid.">
+<meta name="theme-color" content="#040306">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="OUIJA CTF — Ask the Dead for the Flag">
+<meta property="og:description" content="A séance-themed capture the flag. Six trials. One board. Something on the other side already knows your answer.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/board.css">
+<link rel="stylesheet" href="assets/css/home.css">
+</head>
+<body>
+<!-- First knock: ouija{first_knock_answered} — the servant's door was never locked. -->
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ============================= HEADER ============================= -->
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+      <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+        <circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".35"/>
+        <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M24 44 L6.7 14 H41.3 Z" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".45"/>
+        <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+      </svg>
+      <span>
+        <span class="brand__name">OUIJA</span>
+        <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+      </span>
+    </a>
+
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+
+    <nav class="nav" id="nav" aria-label="Main">
+      <a class="nav__link" href="#seance" aria-current="page">The Séance</a>
+      <a class="nav__link" href="#trials">Trials</a>
+      <a class="nav__link" href="#rules">Rules</a>
+      <a class="nav__link" href="#standings">Standings</a>
+      <span class="nav__actions" data-auth-actions>
+        <a class="btn btn--ghost btn--sm" href="login.html">Enter</a>
+        <a class="btn btn--primary btn--sm" href="signup.html">Join the Circle</a>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================= HERO ============================= -->
+<section class="hero" id="seance">
+  <div class="hero__glow" aria-hidden="true"></div>
+
+  <svg class="cobweb cobweb--tl" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="0.7" aria-hidden="true">
+    <path d="M0 0 L120 60M0 0 L60 120M0 0 L100 20M0 0 L20 100M0 0 L84 84"/>
+    <path d="M22 6 Q14 14 6 22M42 10 Q26 26 10 42M62 16 Q38 38 16 62M84 22 Q52 52 22 84M104 30 Q64 64 30 104"/>
+  </svg>
+  <svg class="cobweb cobweb--tr" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="0.7" aria-hidden="true">
+    <path d="M0 0 L120 60M0 0 L60 120M0 0 L100 20M0 0 L20 100M0 0 L84 84"/>
+    <path d="M22 6 Q14 14 6 22M42 10 Q26 26 10 42M62 16 Q38 38 16 62M84 22 Q52 52 22 84M104 30 Q64 64 30 104"/>
+  </svg>
+
+  <div class="wrap hero__inner">
+
+    <div class="hero__head">
+      <p class="eyebrow" data-reveal>Est. 1891 &middot; Reopened for the living</p>
+
+      <h1 class="hero__title">
+        <span class="hero__title-main gilt glitch" data-text="OUIJA" data-spell data-spell-step="110">OUIJA</span>
+        <span class="hero__title-sub">Capture&nbsp;the&nbsp;Flag</span>
+      </h1>
+
+      <p class="hero__lede" data-reveal style="--reveal-delay:520ms">
+        Six trials are buried in this house. The living hid them badly.
+        Rest your hands on the planchette, ask a careful question, and
+        something on the other side will spell the answer out — one
+        letter at a time.
+      </p>
+    </div>
+
+    <!-- The board itself -->
+    <div class="hero__table" data-reveal="scale" style="--reveal-delay:660ms">
+      <div class="candle candle--left" aria-hidden="true">
+        <div class="candle__halo"></div>
+        <div class="candle__flame"></div>
+        <div class="candle__wick"></div>
+        <div class="candle__body"></div>
+      </div>
+
+      <div class="board-stage"
+           data-board
+           data-board-slate="slate"
+           data-board-spell="THE FLAG IS BURIED HERE"
+           data-board-loop="true"
+           data-board-wander="true"></div>
+
+      <div class="candle candle--right" aria-hidden="true">
+        <div class="candle__halo"></div>
+        <div class="candle__flame"></div>
+        <div class="candle__wick"></div>
+        <div class="candle__body"></div>
+      </div>
+    </div>
+
+    <!-- Readout -->
+    <div class="seance">
+      <p class="seance__label">Transmission</p>
+      <output class="seance__slate" id="slate" aria-live="polite"></output>
+
+      <div class="seance__controls">
+        <button class="btn btn--spectral btn--sm" type="button" data-ask="WHO IS THERE">Who is there?</button>
+        <button class="btn btn--spectral btn--sm" type="button" data-ask="WHERE IS THE FLAG">Where is the flag?</button>
+        <button class="btn btn--spectral btn--sm" type="button" data-ask="AM I ALONE">Am I alone?</button>
+        <button class="btn btn--ghost btn--sm" type="button" data-ask="GOODBYE">Close the board</button>
+      </div>
+      <p class="typewriter-note">Or drag across the board yourself — click any glyph to call it.</p>
+    </div>
+
+    <!-- Primary actions -->
+    <div class="hero__cta" data-reveal style="--reveal-delay:820ms">
+      <a class="btn btn--primary btn--lg" href="signup.html">
+        Take your seat
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+      <a class="btn btn--lg" href="login.html">Return to the table</a>
+    </div>
+
+    <!-- Vitals -->
+    <dl class="vitals" data-reveal style="--reveal-delay:940ms">
+      <div class="vitals__item">
+        <dt>Trials</dt>
+        <dd class="gilt" data-count-to="24">0</dd>
+      </div>
+      <div class="vitals__item">
+        <dt>Categories</dt>
+        <dd class="gilt" data-count-to="6">0</dd>
+      </div>
+      <div class="vitals__item">
+        <dt>Hours open</dt>
+        <dd class="gilt" data-count-to="48">0</dd>
+      </div>
+      <div class="vitals__item">
+        <dt>Circles seated</dt>
+        <dd class="gilt" data-circles>0</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="hero__scroll" aria-hidden="true">
+    <span></span>
+  </div>
+</section>
+
+<!-- ============================= THE HOUSE ============================= -->
+<section class="section" id="house">
+  <div class="wrap">
+    <header class="section__head">
+      <p class="eyebrow" data-reveal>The house on Blackmoor Row</p>
+      <h2 data-reveal style="--reveal-delay:80ms">Three ways the dead will speak to you</h2>
+      <p class="lead center" data-reveal style="--reveal-delay:160ms">
+        Every flag in this game reached the other side by a different
+        road. Learn the roads and the board becomes a map.
+      </p>
+    </header>
+
+    <div class="grid grid--3">
+      <article class="card" data-reveal>
+        <svg class="card__rune" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M24 5 L43 39 H5 Z"/>
+          <path d="M24 17v12M24 33.5v.2" stroke-linecap="round" stroke-width="2.4"/>
+        </svg>
+        <h3 class="card__title">Knocks</h3>
+        <p class="card__text">
+          One knock for yes, two for no. The simplest channel, and the
+          easiest to fake — which is exactly why the first trials hide
+          there. Count carefully; a third knock means something else is
+          in the room.
+        </p>
+      </article>
+
+      <article class="card" data-reveal style="--reveal-delay:110ms">
+        <svg class="card__rune" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="24" cy="24" r="18"/>
+          <path d="M24 6c6 6 6 30 0 36M24 6c-6 6-6 30 0 36M6 24h36"/>
+        </svg>
+        <h3 class="card__title">Spelling</h3>
+        <p class="card__text">
+          The planchette drags across the board and the flag arrives
+          letter by letter, out of order, missing its vowels. Reassembly
+          is your problem. The dead are not proofreaders.
+        </p>
+      </article>
+
+      <article class="card" data-reveal style="--reveal-delay:220ms">
+        <svg class="card__rune" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M24 4l5.6 12.4L43 18l-9.5 9.4L36 41l-12-6.4L12 41l2.5-13.6L5 18l13.4-1.6z"/>
+        </svg>
+        <h3 class="card__title">Apports</h3>
+        <p class="card__text">
+          Objects that arrive from nowhere: a photograph, a wax
+          cylinder, a file with the wrong extension. Everything the
+          house hands you is evidence, and some of it is bait.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= TRIALS ============================= -->
+<section class="section" id="trials">
+  <div class="wrap">
+    <header class="section__head">
+      <p class="eyebrow" data-reveal>Six trials</p>
+      <h2 data-reveal style="--reveal-delay:80ms">What waits beyond the veil</h2>
+      <p class="lead center" data-reveal style="--reveal-delay:160ms">
+        Twenty-four flags across six disciplines. Points rise as the
+        room gets colder.
+      </p>
+    </header>
+
+    <div class="grid grid--3 trials">
+      <article class="card trial" data-reveal>
+        <header class="trial__head">
+          <span class="trial__num">I</span>
+          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">The Whispering Wall</h3>
+        <p class="card__text">Web exploitation. The house has a servant's entrance and nobody remembered to lock it.</p>
+        <footer class="trial__foot"><span>Web</span><span>100–400 pts</span></footer>
+      </article>
+
+      <article class="card trial" data-reveal style="--reveal-delay:90ms">
+        <header class="trial__head">
+          <span class="trial__num">II</span>
+          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">Cipher of the Silent Choir</h3>
+        <p class="card__text">Cryptography. Thirteen nuns took a vow. Their letters still arrive, and still refuse to be read.</p>
+        <footer class="trial__foot"><span>Crypto</span><span>150–500 pts</span></footer>
+      </article>
+
+      <article class="card trial" data-reveal style="--reveal-delay:180ms">
+        <header class="trial__head">
+          <span class="trial__num">III</span>
+          <span class="badge badge--spectre"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">Photographs of the Deceased</h3>
+        <p class="card__text">Forensics. Every plate in the album has something behind the emulsion. Look with the right eyes.</p>
+        <footer class="trial__foot"><span>Forensics</span><span>100–450 pts</span></footer>
+      </article>
+
+      <article class="card trial" data-reveal style="--reveal-delay:270ms">
+        <header class="trial__head">
+          <span class="trial__num">IV</span>
+          <span class="badge badge--brass"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">The Planchette's Grain</h3>
+        <p class="card__text">Reverse engineering. Someone carved instructions into the wood. Follow them backwards.</p>
+        <footer class="trial__foot"><span>Reversing</span><span>200–600 pts</span></footer>
+      </article>
+
+      <article class="card trial" data-reveal style="--reveal-delay:360ms">
+        <header class="trial__head">
+          <span class="trial__num">V</span>
+          <span class="badge badge--brass"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">Ectoplasm</h3>
+        <p class="card__text">Binary exploitation. Something is leaking out of the medium, and it is writing past the end of her.</p>
+        <footer class="trial__foot"><span>Pwn</span><span>250–700 pts</span></footer>
+      </article>
+
+      <article class="card trial" data-reveal style="--reveal-delay:450ms">
+        <header class="trial__head">
+          <span class="trial__num">VI</span>
+          <span class="badge badge--ember"><i class="badge__dot"></i>4 flags</span>
+        </header>
+        <h3 class="card__title">Do Not Say Its Name</h3>
+        <p class="card__text">Miscellaneous &amp; OSINT. The last trial has no category, no hints, and no record of who set it.</p>
+        <footer class="trial__foot"><span>Misc</span><span>300–800 pts</span></footer>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= RULES ============================= -->
+<section class="section" id="rules">
+  <div class="wrap">
+    <div class="rules">
+      <div class="rules__col" data-reveal="left">
+        <p class="eyebrow">Rules of the table</p>
+        <h2>Seven courtesies<br>for the dead</h2>
+        <p class="lead">
+          Break them and the board goes quiet. Quiet boards score
+          nothing.
+        </p>
+        <a class="btn btn--spectral" href="signup.html">Agree and be seated</a>
+      </div>
+
+      <ol class="rules__list" data-reveal="right">
+        <li><span class="rules__n">01</span><p>Never sit alone. Circles of two to five mediums; one account each.</p></li>
+        <li><span class="rules__n">02</span><p>Keep your fingers on the planchette. No automated scrapers, no flooding the scoreboard.</p></li>
+        <li><span class="rules__n">03</span><p>Do not pass a flag to another circle. The dead notice, and so do we.</p></li>
+        <li><span class="rules__n">04</span><p>Attack only what the house offers you. Infrastructure is out of bounds.</p></li>
+        <li><span class="rules__n">05</span><p>Flags take the form <code>ouija{...}</code>. Anything else is a hoax.</p></li>
+        <li><span class="rules__n">06</span><p>Ask the house for hints if you must. Each one costs you points.</p></li>
+        <li><span class="rules__n">07</span><p>When you leave, always say good bye. Boards left open stay open.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= STANDINGS ============================= -->
+<section class="section" id="standings">
+  <div class="wrap wrap--narrow">
+    <header class="section__head">
+      <p class="eyebrow" data-reveal>Standings</p>
+      <h2 data-reveal style="--reveal-delay:80ms">Who the dead favour</h2>
+    </header>
+
+    <div class="panel" data-reveal>
+      <div class="panel__body">
+        <ol class="ladder" id="ladder">
+          <li class="ladder__empty">
+            <p class="typewriter-note">No circle has scored yet. The board is cold.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= CLOSING ============================= -->
+<section class="section closing">
+  <div class="wrap wrap--narrow center">
+    <div class="ornament" data-reveal><i class="ornament__gem"></i></div>
+    <h2 data-reveal style="--reveal-delay:80ms">Something already answered.</h2>
+    <p class="lead center" data-reveal style="--reveal-delay:160ms">
+      It spelled a name, and the name was yours. Come and see what
+      else it knows.
+    </p>
+    <div class="hero__cta" data-reveal style="--reveal-delay:240ms">
+      <a class="btn btn--primary btn--lg" href="signup.html">Join the circle</a>
+      <a class="btn btn--lg" href="login.html">I have sat here before</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================= FOOTER ============================= -->
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <p class="site-footer__note">OUIJA CTF &middot; Blackmoor Row &middot; Do not play alone</p>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="#rules">Rules</a>
+      <a href="#trials">Trials</a>
+      <a href="signup.html">Join</a>
+      <a href="login.html">Enter</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/vault.js"></script>
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/home.js"></script>
+</body>
+</html>

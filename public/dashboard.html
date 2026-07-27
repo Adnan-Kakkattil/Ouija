@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Table — OUIJA CTF</title>
+<meta name="theme-color" content="#040306">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/board.css">
+<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header is-stuck">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+      <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+        <circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".35"/>
+        <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+      </svg>
+      <span>
+        <span class="brand__name">OUIJA</span>
+        <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+      </span>
+    </a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a class="nav__link" href="dashboard.html" aria-current="page">The Table</a>
+      <a class="nav__link" href="challenges.html">Trials</a>
+      <a class="nav__link" href="index.html#standings">Standings</a>
+      <span class="nav__actions">
+        <button class="btn btn--ghost btn--sm" type="button" id="logoutBtn">Leave the board</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="dash">
+  <div class="wrap">
+    <header class="dash__hero">
+      <p class="eyebrow">You are seated</p>
+      <h1 class="dash__title">Welcome, <span class="gilt" id="userName">medium</span></h1>
+      <p class="lead" id="userTeam">Your circle waits in silence.</p>
+    </header>
+
+    <div class="dash__stats">
+      <div class="stat">
+        <span class="stat__label">Score</span>
+        <strong class="stat__value gilt" id="userScore">0</strong>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Flags claimed</span>
+        <strong class="stat__value gilt" id="userSolved">0</strong>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Circle</span>
+        <strong class="stat__value" id="userCircle">—</strong>
+      </div>
+    </div>
+
+    <div class="dash__grid">
+      <section class="panel">
+        <div class="panel__body">
+          <p class="eyebrow">Ask the house</p>
+          <div class="board-stage"
+               data-board
+               data-board-slate="dashSlate"
+               data-board-spell="SIT QUIETLY"
+               id="dashBoard"></div>
+          <div class="seance">
+            <p class="seance__label">Transmission</p>
+            <output class="seance__slate" id="dashSlate" aria-live="polite"></output>
+            <div class="seance__controls">
+              <button class="btn btn--spectral btn--sm" type="button" data-ask="GOODBYE">Say good bye</button>
+              <button class="btn btn--spectral btn--sm" type="button" data-ask="WHERE IS THE FLAG">Where is the flag?</button>
+              <a class="btn btn--primary btn--sm" href="challenges.html">Open the trials</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="dash__side">
+        <section class="panel">
+          <div class="panel__body stack">
+            <p class="eyebrow">Next trial</p>
+            <h2 class="dash__side-title" id="nextTitle">Loading…</h2>
+            <p class="muted" id="nextDesc"></p>
+            <a class="btn btn--spectral btn--block" href="challenges.html" id="nextLink">Begin</a>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel__body">
+            <p class="eyebrow">Standings</p>
+            <ol class="ladder ladder--compact" id="dashLadder">
+              <li class="ladder__empty"><p class="typewriter-note">The board is cold.</p></li>
+            </ol>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <p class="site-footer__note">OUIJA CTF · Always say good bye</p>
+    <nav class="site-footer__links">
+      <a href="challenges.html">Trials</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/vault.js"></script>
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/dashboard.js"></script>
+</body>
+</html>

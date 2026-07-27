@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join the Circle — OUIJA CTF</title>
+<meta name="description" content="Register as a medium, choose the circle you sit with, and take your place at the OUIJA CTF board.">
+<meta name="theme-color" content="#040306">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/board.css">
+<link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+
+<a class="skip-link" href="#form">Skip to the form</a>
+
+<div class="auth">
+
+  <!-- ===================== ASIDE ===================== -->
+  <aside class="auth__aside">
+    <div class="auth__aside-top">
+      <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+        <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+          <circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".35"/>
+          <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M24 44 L6.7 14 H41.3 Z" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".45"/>
+          <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+        </svg>
+        <span>
+          <span class="brand__name">OUIJA</span>
+          <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+        </span>
+      </a>
+      <a class="btn btn--ghost btn--sm" href="index.html">
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6"/>
+        </svg>
+        Leave
+      </a>
+    </div>
+
+    <div class="auth__aside-mid">
+      <div class="board-stage board-stage--ambient"
+           data-board
+           data-board-interactive="false"
+           data-board-tilt="false"
+           data-board-spell="SIT AND BE COUNTED"
+           data-board-loop="true"></div>
+
+      <blockquote class="auth__quote">
+        &ldquo;It answered before we had finished asking. That was the
+        part none of us could explain afterwards.&rdquo;
+        <cite>— Sitting no. 9, Blackmoor Row</cite>
+      </blockquote>
+    </div>
+
+    <div class="auth__tally">
+      <span><strong data-tally-circles>0</strong> circles seated</span>
+      <span aria-hidden="true">·</span>
+      <span><strong data-tally-mediums>0</strong> mediums registered</span>
+    </div>
+  </aside>
+
+  <!-- ===================== FORM ===================== -->
+  <main class="auth__panel">
+    <form class="auth__form" id="form" novalidate autocomplete="on">
+
+      <header class="auth__head">
+        <p class="eyebrow">Enrolment</p>
+        <h1>Join the circle</h1>
+        <p>
+          Give the board a name to call you by, and tell us who you sit
+          with. Circles score together.
+        </p>
+      </header>
+
+      <div class="alert alert--error" id="formError" role="alert" hidden>
+        <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.2" stroke-linecap="round"/>
+        </svg>
+        <span id="formErrorText"></span>
+      </div>
+
+      <div class="auth__fields">
+
+        <!-- Medium name (username) -->
+        <div class="field" data-field="username">
+          <label class="field__label" for="username">
+            <span>Medium name</span>
+            <span class="field__hint">your username</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <circle cx="12" cy="8.5" r="3.9"/><path d="M4.6 20c1.3-3.8 4-5.7 7.4-5.7s6.1 1.9 7.4 5.7"/>
+            </svg>
+            <input class="field__input" id="username" name="username" type="text"
+                   autocomplete="username" spellcheck="false" maxlength="24"
+                   placeholder="the_pale_lantern" required
+                   aria-describedby="usernameError">
+          </div>
+          <p class="field__error" id="usernameError" role="alert"></p>
+        </div>
+
+        <!-- Email -->
+        <div class="field" data-field="email">
+          <label class="field__label" for="email">
+            <span>Address for summons</span>
+            <span class="field__hint">email</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="M3.6 6.7 12 13l8.4-6.3"/>
+            </svg>
+            <input class="field__input" id="email" name="email" type="email"
+                   autocomplete="email" spellcheck="false" inputmode="email"
+                   placeholder="you@blackmoor.row" required
+                   aria-describedby="emailError">
+          </div>
+          <p class="field__error" id="emailError" role="alert"></p>
+        </div>
+
+        <!-- Circle (team) -->
+        <div class="field" data-field="team">
+          <label class="field__label" for="team">
+            <span>Your circle</span>
+            <span class="field__hint">team name</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <circle cx="9" cy="9" r="3.1"/><circle cx="16.5" cy="10.5" r="2.6"/>
+              <path d="M3 19c.9-2.8 3-4.2 6-4.2s5.1 1.4 6 4.2M15.4 15.2c2 .5 3.3 1.7 3.9 3.8"/>
+            </svg>
+            <select class="field__select" id="team" name="team" required aria-describedby="teamError">
+              <option value="" selected disabled>Choose the circle you sit with…</option>
+            </select>
+            <svg class="field__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M6 9.5l6 6 6-6"/>
+            </svg>
+          </div>
+          <p class="field__error" id="teamError" role="alert"></p>
+
+          <!-- Appears only when founding a new circle -->
+          <div class="reveal-field" id="newTeamWrap">
+            <div>
+              <div class="field" data-field="teamName">
+                <label class="field__label" for="teamName">
+                  <span>Name your new circle</span>
+                  <span class="field__hint">3–32 characters</span>
+                </label>
+                <div class="field__shell">
+                  <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path d="M12 3.2l2.6 5.8 6.2.7-4.6 4.3 1.2 6.1L12 17.2l-5.4 2.9 1.2-6.1L3.2 9.7l6.2-.7z"/>
+                  </svg>
+                  <input class="field__input" id="teamName" name="teamName" type="text"
+                         maxlength="32" placeholder="The Ninth Knock"
+                         aria-describedby="teamNameError">
+                </div>
+                <p class="field__error" id="teamNameError" role="alert"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passphrase -->
+        <div class="field" data-field="password">
+          <label class="field__label" for="password">
+            <span>Passphrase</span>
+            <span class="field__hint">8 characters or more</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2"/>
+              <path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/>
+            </svg>
+            <input class="field__input" id="password" name="password" type="password"
+                   autocomplete="new-password" maxlength="200"
+                   placeholder="••••••••" required
+                   aria-describedby="passwordError">
+            <button class="field__peek" type="button" data-peek="password"
+                    aria-label="Show passphrase" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/>
+                <circle cx="12" cy="12" r="2.9"/>
+              </svg>
+            </button>
+          </div>
+          <div class="strength" aria-hidden="true">
+            <div class="strength__track"><div class="strength__fill" id="strengthFill"></div></div>
+            <span class="strength__label" id="strengthLabel">—</span>
+          </div>
+          <p class="hint-line" id="capsHint">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 5l7 8h-4v6H9v-6H5z"/>
+            </svg>
+            Caps lock is on
+          </p>
+          <p class="field__error" id="passwordError" role="alert"></p>
+        </div>
+
+        <!-- Confirm -->
+        <div class="field" data-field="confirm">
+          <label class="field__label" for="confirm">
+            <span>Repeat it</span>
+            <span class="field__hint">so the board is certain</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path d="M20 6.5 9.4 17.1 4 11.7"/>
+            </svg>
+            <input class="field__input" id="confirm" name="confirm" type="password"
+                   autocomplete="new-password" maxlength="200"
+                   placeholder="••••••••" required
+                   aria-describedby="confirmError">
+            <button class="field__peek" type="button" data-peek="confirm"
+                    aria-label="Show passphrase" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/>
+                <circle cx="12" cy="12" r="2.9"/>
+              </svg>
+            </button>
+          </div>
+          <p class="field__error" id="confirmError" role="alert"></p>
+        </div>
+
+        <!-- Rules -->
+        <div class="field" data-field="agree">
+          <label class="check">
+            <input type="checkbox" id="agree" name="agree" required>
+            <span class="check__box" aria-hidden="true"></span>
+            <span>
+              I have read the <a href="index.html#rules">seven courtesies</a>
+              and I will always say good bye before leaving the board.
+            </span>
+          </label>
+          <p class="field__error" id="agreeError" role="alert"></p>
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--lg btn--block auth__submit" type="submit" id="submit">
+        Take my seat
+      </button>
+
+      <p class="auth__foot">
+        Already sat at this table? <a href="login.html">Enter the séance</a>
+      </p>
+    </form>
+  </main>
+</div>
+
+<!-- ===================== WELCOME ===================== -->
+<div class="welcome" id="welcome" aria-hidden="true">
+  <div class="welcome__inner">
+    <p class="eyebrow">The board acknowledges you</p>
+    <div class="board-stage"
+         id="welcomeBoard"
+         data-board
+         data-board-interactive="false"
+         data-board-tilt="false"
+         data-board-slate="welcomeSlate"></div>
+    <output class="welcome__slate" id="welcomeSlate" aria-live="polite"></output>
+    <p class="typewriter-note">Taking you to the table…</p>
+  </div>
+</div>
+
+<script src="assets/js/vault.js"></script>
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/signup.js"></script>
+</body>
+</html>

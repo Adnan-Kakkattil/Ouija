@@ -1,0 +1,267 @@
+/* =========================================================
+   OUIJA CTF — Enrolment & entry
+   ========================================================= */
+
+.auth {
+  position: relative;
+  z-index: var(--z-content);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  min-height: 100vh;
+}
+
+@media (max-width: 940px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   ASIDE — the room you are about to enter
+   ========================================================= */
+.auth__aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  padding: clamp(var(--sp-5), 4vw, var(--sp-8));
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background:
+    radial-gradient(70% 50% at 30% 88%, rgba(210, 87, 15, 0.16) 0%, transparent 66%),
+    radial-gradient(60% 44% at 74% 10%, rgba(127, 212, 193, 0.07) 0%, transparent 68%),
+    linear-gradient(160deg, rgba(28, 24, 38, 0.5) 0%, rgba(4, 3, 6, 0.7) 100%);
+}
+
+@media (max-width: 940px) {
+  .auth__aside {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    min-height: 62vh;
+  }
+}
+
+.auth__aside-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.auth__aside-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+  text-align: center;
+}
+
+.auth__aside .board-stage {
+  width: 100%;
+  max-width: 460px;
+}
+
+.auth__quote {
+  max-width: 34ch;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  font-style: italic;
+  line-height: var(--lh-loose);
+  color: var(--parchment-300);
+}
+
+.auth__quote cite {
+  display: block;
+  margin-top: var(--sp-3);
+  font-family: var(--font-type);
+  font-size: var(--fs-xs);
+  font-style: normal;
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--brass-500);
+}
+
+/* Marks left in the plaster by previous sitters */
+.auth__tally {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-family: var(--font-type);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--parchment-500);
+}
+
+.auth__tally strong {
+  color: var(--brass-300);
+  font-weight: 400;
+  font-size: var(--fs-base);
+}
+
+/* =========================================================
+   PANEL — the form
+   ========================================================= */
+.auth__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(var(--sp-6), 5vw, var(--sp-8)) clamp(var(--sp-4), 5vw, var(--sp-8));
+}
+
+.auth__form {
+  width: 100%;
+  max-width: 448px;
+}
+
+.auth__head {
+  margin-bottom: var(--sp-6);
+}
+
+.auth__head h1 {
+  font-size: var(--fs-xl);
+  margin-block: var(--sp-3) var(--sp-3);
+}
+
+.auth__head p {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+  line-height: var(--lh-normal);
+}
+
+.auth__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.auth__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 480px) {
+  .auth__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth__submit {
+  margin-top: var(--sp-5);
+}
+
+.auth__foot {
+  margin-top: var(--sp-5);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.auth__foot a {
+  font-family: var(--font-serif);
+  letter-spacing: var(--ls-wide);
+}
+
+.auth__between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   The new-circle field unfurls beneath the dropdown
+   ========================================================= */
+.reveal-field {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--dur-slow) var(--ease-out), opacity var(--dur-base) var(--ease-out),
+    margin-top var(--dur-slow) var(--ease-out);
+  margin-top: 0;
+}
+
+.reveal-field > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.reveal-field.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: var(--sp-4);
+}
+
+/* =========================================================
+   Success interstitial: the board welcomes the new medium
+   ========================================================= */
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-5);
+  background: radial-gradient(120% 120% at 50% 40%, rgba(4, 3, 6, 0.94), #010002);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.welcome.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.welcome__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+  text-align: center;
+  transform: scale(0.96);
+  transition: transform var(--dur-slow) var(--ease-spirit);
+}
+
+.welcome.is-open .welcome__inner {
+  transform: scale(1);
+}
+
+.welcome .board-stage {
+  width: min(560px, 88vw);
+}
+
+.welcome__title {
+  font-size: var(--fs-lg);
+}
+
+.welcome__slate {
+  font-family: var(--font-board);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.24em;
+  min-height: 1.6em;
+  color: var(--spectre-300);
+  text-shadow: 0 0 12px rgba(127, 212, 193, 0.6);
+}
+
+/* =========================================================
+   Caps-lock and other quiet warnings
+   ========================================================= */
+.hint-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-type);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  color: var(--brass-400);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.hint-line.is-shown {
+  opacity: 1;
+}

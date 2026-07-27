@@ -1,0 +1,587 @@
+/* =========================================================
+   OUIJA CTF — Atmosphere
+   Fog, embers, grain, candlelight, spirit cursor, reveals.
+   Every animation here touches only opacity/transform/filter
+   so the compositor keeps it on the GPU.
+   ========================================================= */
+
+/* =========================================================
+   1. FOG — four drifting layers at different depths
+   ========================================================= */
+.fog {
+  position: fixed;
+  inset: -20% -20% -10% -20%;
+  pointer-events: none;
+  z-index: var(--z-fog-back);
+  overflow: hidden;
+}
+
+.fog--front {
+  z-index: var(--z-fog-front);
+}
+
+.fog__layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  /* Soft gradients only — no CSS blur (blur on large fixed layers tanks FPS) */
+  background-repeat: no-repeat;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-name: fog-drift, fog-breathe;
+  will-change: transform, opacity;
+}
+
+/* Soft blobs made of overlapping radial gradients read as
+   rolling mist far more convincingly than a single wash. */
+.fog__layer--1 {
+  background-image:
+    radial-gradient(38% 24% at 18% 62%, rgba(232, 226, 240, 0.14) 0%, transparent 70%),
+    radial-gradient(30% 20% at 68% 40%, rgba(200, 214, 226, 0.11) 0%, transparent 72%),
+    radial-gradient(46% 28% at 88% 76%, rgba(216, 224, 236, 0.1) 0%, transparent 68%);
+  background-size: 180% 120%;
+  animation-duration: 92s, 17s;
+  animation-delay: 0s, 0s;
+}
+
+.fog__layer--2 {
+  background-image:
+    radial-gradient(34% 22% at 42% 30%, rgba(190, 208, 222, 0.12) 0%, transparent 70%),
+    radial-gradient(40% 26% at 12% 84%, rgba(226, 218, 236, 0.1) 0%, transparent 68%),
+    radial-gradient(28% 18% at 76% 18%, rgba(180, 200, 220, 0.09) 0%, transparent 72%);
+  background-size: 200% 140%;
+  animation-duration: 137s, 23s;
+  animation-delay: -30s, -4s;
+  animation-direction: reverse, normal;
+}
+
+.fog__layer--3 {
+  background-image:
+    radial-gradient(52% 30% at 60% 88%, rgba(210, 200, 226, 0.11) 0%, transparent 66%),
+    radial-gradient(36% 22% at 26% 12%, rgba(196, 212, 228, 0.08) 0%, transparent 70%);
+  background-size: 240% 160%;
+  animation-duration: 181s, 29s;
+  animation-delay: -70s, -9s;
+}
+
+/* Low-lying ground fog with a warm candlelit underside */
+.fog__layer--ground {
+  top: auto;
+  bottom: -8%;
+  height: 46%;
+  background-image:
+    radial-gradient(70% 100% at 30% 100%, rgba(210, 87, 15, 0.12) 0%, transparent 72%),
+    radial-gradient(60% 100% at 74% 100%, rgba(226, 220, 236, 0.12) 0%, transparent 70%);
+  background-size: 170% 100%;
+  animation-duration: 118s, 21s;
+  animation-delay: -18s, -2s;
+}
+
+@keyframes fog-drift {
+  from {
+    transform: translate3d(-3%, 0, 0);
+  }
+  to {
+    transform: translate3d(3%, 0, 0);
+  }
+}
+
+@keyframes fog-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   2. EMBERS & DUST — JS-seeded motes rising through the dark
+   ========================================================= */
+.motes {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-fog-back);
+  overflow: hidden;
+}
+
+.mote {
+  position: absolute;
+  bottom: -6vh;
+  border-radius: 50%;
+  animation-name: mote-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Warm ash lifted off the candle flames */
+.mote--ember {
+  background: radial-gradient(circle, var(--flame-core) 0%, var(--flame-mid) 45%, transparent 72%);
+}
+
+/* Cold spirit dust, drifting where the veil is thin */
+.mote--spirit {
+  background: radial-gradient(circle, var(--spectre-200) 0%, var(--spectre-400) 50%, transparent 74%);
+}
+
+.mote--dust {
+  background: radial-gradient(circle, rgba(244, 236, 216, 0.85) 0%, rgba(196, 179, 148, 0.3) 55%, transparent 76%);
+}
+
+/* Drift is driven by a per-mote --drift set in JS so no two
+   motes trace the same path. */
+@keyframes mote-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--peak, 0.85);
+  }
+  50% {
+    transform: translate3d(var(--drift, 20px), -55vh, 0) scale(1);
+  }
+  82% {
+    opacity: var(--peak, 0.85);
+  }
+  100% {
+    transform: translate3d(calc(var(--drift, 20px) * -0.7), -112vh, 0) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* =========================================================
+   3. GRAIN + VIGNETTE — cheap film stock, expensive mood
+   ========================================================= */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0.04;
+  /* Static tiled noise — no feTurbulence, no perpetual animation */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-vignette);
+  pointer-events: none;
+  background:
+    radial-gradient(130% 100% at 50% 50%, transparent 42%, rgba(2, 1, 4, 0.5) 78%, rgba(2, 1, 4, 0.9) 100%);
+}
+
+/* Occasional dip in the candlelight — as if something passed by */
+.vignette--flicker {
+  animation: room-flicker 13s ease-in-out infinite;
+}
+
+@keyframes room-flicker {
+  0%,
+  86%,
+  100% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 0.86;
+  }
+  89% {
+    opacity: 1;
+  }
+  91% {
+    opacity: 0.72;
+  }
+  92.5% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.9;
+  }
+}
+
+/* =========================================================
+   4. SPIRIT CURSOR — a wisp that lags behind the pointer
+   ========================================================= */
+.wisp {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  opacity: 0;
+  background: radial-gradient(circle, rgba(169, 236, 221, 0.5) 0%, rgba(127, 212, 193, 0.16) 45%, transparent 72%);
+  transition: opacity var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out),
+    height var(--dur-base) var(--ease-out);
+}
+
+.wisp.is-awake {
+  opacity: 1;
+}
+
+.wisp.is-hot {
+  width: 46px;
+  height: 46px;
+  background: radial-gradient(circle, rgba(238, 201, 122, 0.42) 0%, rgba(217, 169, 74, 0.14) 48%, transparent 74%);
+}
+
+.wisp__trail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  background: rgba(169, 236, 221, 0.5);
+}
+
+/* =========================================================
+   5. CANDLES — flames that actually dance
+   ========================================================= */
+.candle {
+  position: relative;
+  width: 26px;
+}
+
+.candle__halo {
+  position: absolute;
+  left: 50%;
+  bottom: 46px;
+  width: 190px;
+  height: 190px;
+  translate: -50% 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 180, 74, 0.2) 0%, rgba(210, 87, 15, 0.08) 40%, transparent 70%);
+  animation: halo-pulse 4.3s ease-in-out infinite;
+}
+
+.candle__flame {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  width: 13px;
+  height: 30px;
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  border-radius: 50% 50% 46% 46% / 68% 68% 32% 32%;
+  background: linear-gradient(to top, var(--flame-edge) 0%, var(--flame-mid) 46%, var(--flame-core) 100%);
+  animation: flame-dance 1.9s ease-in-out infinite, flame-flare 6.7s ease-in-out infinite;
+}
+
+.candle__wick {
+  position: absolute;
+  left: 50%;
+  bottom: 36px;
+  width: 2px;
+  height: 7px;
+  translate: -50% 0;
+  background: #2a2018;
+  border-radius: 1px;
+}
+
+.candle__body {
+  height: 78px;
+  border-radius: 4px 4px 2px 2px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0%, transparent 26%, rgba(255, 255, 255, 0.14) 48%, transparent 74%, rgba(0, 0, 0, 0.46) 100%),
+    linear-gradient(to bottom, #efe3cb 0%, #d9c8a6 55%, #b8a382 100%);
+  box-shadow: inset 0 6px 8px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* Wax that has run down the side */
+.candle__body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 6px;
+  height: 26px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(to bottom, #f3e8d2, rgba(217, 200, 166, 0));
+}
+
+@keyframes flame-dance {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  20% {
+    transform: scale(0.94, 1.08) skewX(-3deg);
+  }
+  40% {
+    transform: scale(1.05, 0.95) skewX(2deg);
+  }
+  60% {
+    transform: scale(0.97, 1.06) skewX(-2deg);
+  }
+  80% {
+    transform: scale(1.03, 0.97) skewX(3deg);
+  }
+}
+
+@keyframes flame-flare {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  76% {
+    opacity: 0.55;
+  }
+  79% {
+    opacity: 0.95;
+  }
+  83% {
+    opacity: 0.66;
+  }
+}
+
+@keyframes halo-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.09);
+  }
+}
+
+/* =========================================================
+   6. SCROLL REVEALS — driven by IntersectionObserver
+   ========================================================= */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="left"] {
+  transform: translate3d(-32px, 0, 0);
+}
+
+[data-reveal="right"] {
+  transform: translate3d(32px, 0, 0);
+}
+
+[data-reveal="scale"] {
+  transform: scale(0.94);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* =========================================================
+   7. VEIL — full-screen wipe between pages
+   ========================================================= */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-veil);
+  pointer-events: none;
+  background: radial-gradient(120% 120% at 50% 50%, rgba(4, 3, 6, 0.92) 40%, #010002 100%);
+  opacity: 0;
+  transition: opacity var(--dur-veil) var(--ease-in-out);
+}
+
+.veil.is-closing {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Page arrival: lift the veil */
+@keyframes veil-lift {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.veil.is-lifting {
+  animation: veil-lift var(--dur-veil) var(--ease-out) forwards;
+}
+
+/* =========================================================
+   8. MISC FLOURISHES
+   ========================================================= */
+
+/* Letters materialising one by one, as if being spelled out */
+.spell-in > span {
+  display: inline-block;
+  opacity: 0;
+  transform: translate3d(0, 0.34em, 0) scale(0.9);
+  animation: spell-letter 620ms var(--ease-out) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes spell-letter {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Slow hover for sigils and seals */
+.float-slow {
+  animation: float-slow 7.5s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-11px) rotate(1.4deg);
+  }
+}
+
+.spin-slow {
+  animation: spin-slow 44s linear infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Text that shudders like a bad signal */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.glitch::before {
+  color: var(--spectre-400);
+  animation: glitch-a 5.5s steps(2, end) infinite;
+}
+
+.glitch::after {
+  color: var(--ember-400);
+  animation: glitch-b 5.5s steps(2, end) infinite;
+}
+
+@keyframes glitch-a {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  93% {
+    opacity: 0.7;
+    transform: translate(-3px, 1px);
+  }
+  95% {
+    opacity: 0.5;
+    transform: translate(2px, -2px);
+  }
+  97% {
+    opacity: 0;
+  }
+}
+
+@keyframes glitch-b {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  94% {
+    opacity: 0.6;
+    transform: translate(3px, -1px);
+  }
+  96% {
+    opacity: 0.45;
+    transform: translate(-2px, 2px);
+  }
+  98% {
+    opacity: 0;
+  }
+}
+
+/* Cobweb in a corner */
+.cobweb {
+  position: absolute;
+  width: clamp(90px, 14vw, 170px);
+  opacity: 0.16;
+  pointer-events: none;
+  color: var(--parchment-200);
+}
+
+.cobweb--tl {
+  top: 0;
+  left: 0;
+}
+.cobweb--tr {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+.cobweb--br {
+  bottom: 0;
+  right: 0;
+  transform: scale(-1);
+}
+
+/* =========================================================
+   9. REDUCED MOTION — strip the theatre, keep the mood
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .motes,
+  .wisp,
+  .wisp__trail,
+  .grain {
+    display: none;
+  }
+
+  .fog__layer {
+    opacity: 0.7;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .spell-in > span {
+    opacity: 1;
+    transform: none;
+  }
+}

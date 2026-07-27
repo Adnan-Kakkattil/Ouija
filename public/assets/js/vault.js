@@ -1,0 +1,134 @@
+/* =========================================================
+   OUIJA CTF — Client vault (API-backed)
+   Talks to /api/auth and /api/challenges. Sessions use
+   httpOnly cookies set by Express — no passwords in localStorage.
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  const RULES = {
+    username: /^[a-z0-9](?:[a-z0-9_.-]{1,22})[a-z0-9]$/i,
+    email: /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i,
+    teamName: /^[\p{L}\p{N}][\p{L}\p{N} '&.:_-]{2,30}$/u,
+  };
+
+  async function api(path, options) {
+    const opts = Object.assign({ credentials: "same-origin" }, options || {});
+    opts.headers = Object.assign({ Accept: "application/json" }, opts.headers || {});
+    if (opts.body && typeof opts.body === "object" && !(opts.body instanceof FormData)) {
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(opts.body);
+    }
+    const res = await fetch(path, opts);
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = { ok: false, message: "The veil returned silence." };
+    }
+    if (!res.ok) {
+      const err = new Error((data && data.message) || "The board refused.");
+      err.field = data && data.field;
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  }
+
+  let cachedUser = undefined;
+
+  const Vault = {
+    RULES,
+
+    async listTeams() {
+      const data = await api("/api/auth/teams");
+      return data.teams || [];
+    },
+
+    async currentUser(force) {
+      if (!force && cachedUser !== undefined) return cachedUser;
+      const data = await api("/api/auth/me");
+      cachedUser = data.user || null;
+      return cachedUser;
+    },
+
+    async signup(input) {
+      const data = await api("/api/auth/signup", { method: "POST", body: input });
+      cachedUser = data.user;
+      return data.user;
+    },
+
+    async login(input) {
+      const data = await api("/api/auth/login", { method: "POST", body: input });
+      cachedUser = data.user;
+      return data.user;
+    },
+
+    async logout() {
+      await api("/api/auth/logout", { method: "POST", body: {} });
+      cachedUser = null;
+    },
+
+    async leaderboard() {
+      const data = await api("/api/auth/leaderboard");
+      return data;
+    },
+
+    async stats() {
+      const data = await api("/api/auth/stats");
+      return data;
+    },
+
+    async challenges() {
+      const data = await api("/api/challenges");
+      return data.challenges || [];
+    },
+
+    async submitFlag(id, flag) {
+      return api("/api/challenges/" + encodeURIComponent(id) + "/submit", {
+        method: "POST",
+        body: { flag },
+      });
+    },
+
+    async requireAuth(redirectTo) {
+      const user = await this.currentUser(true);
+      if (!user) {
+        const back = encodeURIComponent(location.pathname.split("/").pop() || "");
+        location.replace((redirectTo || "login.html") + (back ? "?next=" + back : ""));
+        return null;
+      }
+      return user;
+    },
+
+    async redirectIfAuthed(to) {
+      const user = await this.currentUser(true);
+      if (user) {
+        location.replace(to || "dashboard.html");
+        return true;
+      }
+      return false;
+    },
+
+    strength(password) {
+      const pw = String(password || "");
+      if (!pw) return { score: 0, label: "—" };
+      let score = 0;
+      if (pw.length >= 8) score += 1;
+      if (pw.length >= 12) score += 1;
+      if (pw.length >= 18) score += 1;
+      if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score += 1;
+      if (/\d/.test(pw)) score += 1;
+      if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+      if (/(.)\1{2,}/.test(pw)) score -= 1;
+      if (/^(?:password|qwerty|letmein|ouija|123456)/i.test(pw)) score = Math.min(score, 1);
+      score = Math.max(0, Math.min(6, score));
+      const labels = ["Silent", "Faint", "Whispering", "Stirring", "Speaking", "Resonant", "Unbroken"];
+      return { score, label: labels[score] };
+    },
+  };
+
+  window.Vault = Vault;
+})();

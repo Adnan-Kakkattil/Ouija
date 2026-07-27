@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enter the Séance — OUIJA CTF</title>
+<meta name="description" content="Return to the OUIJA CTF board. Sign in with your medium name or your email address.">
+<meta name="theme-color" content="#040306">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/board.css">
+<link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+
+<a class="skip-link" href="#form">Skip to the form</a>
+
+<div class="auth">
+
+  <!-- ===================== ASIDE ===================== -->
+  <aside class="auth__aside">
+    <div class="auth__aside-top">
+      <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+        <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+          <circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".35"/>
+          <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M24 44 L6.7 14 H41.3 Z" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".45"/>
+          <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+        </svg>
+        <span>
+          <span class="brand__name">OUIJA</span>
+          <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+        </span>
+      </a>
+      <a class="btn btn--ghost btn--sm" href="index.html">
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6"/>
+        </svg>
+        Leave
+      </a>
+    </div>
+
+    <div class="auth__aside-mid">
+      <div class="board-stage board-stage--ambient"
+           data-board
+           data-board-interactive="false"
+           data-board-tilt="false"
+           data-board-spell="WE KEPT YOUR CHAIR"
+           data-board-loop="true"></div>
+
+      <blockquote class="auth__quote">
+        &ldquo;The board remembers every hand that has rested on it.
+        Yours it remembers particularly well.&rdquo;
+        <cite>— Marginalia, house ledger</cite>
+      </blockquote>
+    </div>
+
+    <div class="auth__tally">
+      <span><strong data-tally-circles>0</strong> circles seated</span>
+      <span aria-hidden="true">·</span>
+      <span><strong data-tally-mediums>0</strong> mediums registered</span>
+    </div>
+  </aside>
+
+  <!-- ===================== FORM ===================== -->
+  <main class="auth__panel">
+    <form class="auth__form" id="form" novalidate autocomplete="on">
+
+      <header class="auth__head">
+        <p class="eyebrow">Entry</p>
+        <h1>Enter the séance</h1>
+        <p>
+          Your medium name or the address you registered with — the
+          board answers to either.
+        </p>
+      </header>
+
+      <div class="alert alert--error" id="formError" role="alert" hidden>
+        <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.2" stroke-linecap="round"/>
+        </svg>
+        <span id="formErrorText"></span>
+      </div>
+
+      <div class="auth__fields">
+
+        <!-- Identifier: username OR email -->
+        <div class="field" data-field="identifier">
+          <label class="field__label" for="identifier">
+            <span>Medium name or address</span>
+            <span class="field__hint">username or email</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <circle cx="12" cy="8.5" r="3.9"/><path d="M4.6 20c1.3-3.8 4-5.7 7.4-5.7s6.1 1.9 7.4 5.7"/>
+            </svg>
+            <input class="field__input" id="identifier" name="identifier" type="text"
+                   autocomplete="username" spellcheck="false" maxlength="120"
+                   placeholder="the_pale_lantern &nbsp;or&nbsp; you@blackmoor.row" required
+                   aria-describedby="identifierError">
+          </div>
+          <p class="field__error" id="identifierError" role="alert"></p>
+        </div>
+
+        <!-- Passphrase -->
+        <div class="field" data-field="password">
+          <label class="field__label" for="password">
+            <span>Passphrase</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2"/>
+              <path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/>
+            </svg>
+            <input class="field__input" id="password" name="password" type="password"
+                   autocomplete="current-password" maxlength="200"
+                   placeholder="••••••••" required
+                   aria-describedby="passwordError">
+            <button class="field__peek" type="button" data-peek="password"
+                    aria-label="Show passphrase" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/>
+                <circle cx="12" cy="12" r="2.9"/>
+              </svg>
+            </button>
+          </div>
+          <p class="hint-line" id="capsHint">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 5l7 8h-4v6H9v-6H5z"/>
+            </svg>
+            Caps lock is on
+          </p>
+          <p class="field__error" id="passwordError" role="alert"></p>
+        </div>
+
+        <div class="auth__between">
+          <label class="check">
+            <input type="checkbox" id="remember" name="remember">
+            <span class="check__box" aria-hidden="true"></span>
+            <span>Keep my chair for 30 days</span>
+          </label>
+          <a class="typewriter-note" href="#" data-forgot>Forgotten?</a>
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--lg btn--block auth__submit" type="submit" id="submit">
+        Open the board
+      </button>
+
+      <p class="auth__foot">
+        Never sat here before? <a href="signup.html">Join the circle</a>
+      </p>
+    </form>
+  </main>
+</div>
+
+<script src="assets/js/vault.js"></script>
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/login.js"></script>
+</body>
+</html>
