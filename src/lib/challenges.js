@@ -15,7 +15,7 @@ const rooms = [
     title: "The First Chamber",
     lede: "Dust, moonlight, and eight objects that remember Olivia.",
     pointsPerChallenge: 100,
-    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4", "room1-5", "room1-6"],
+    challengeIds: ["room1-1", "room1-2", "room1-3", "room1-4", "room1-5", "room1-6", "room1-7"],
   },
   {
     id: "room-2",
@@ -147,6 +147,22 @@ const challenges = [
     correctFlag: "flag{listen_to_the_whispers}",
     artifactUrl: "assets/files/haunted-musicbox.wav",
     artifactLabel: "Download the music box recording",
+  },
+  {
+    id: "room1-7",
+    roomId: "room-1",
+    category: "forensics",
+    trial: "Room I · The First Chamber",
+    roman: "I",
+    title: "DO NOT OPEN",
+    points: 100,
+    difficulty: "easy",
+    description:
+      "An old USB drive was taped under the desk. Inside sits a locked archive labelled DO NOT OPEN. Crack the ZIP password and recover what someone tried to bury.",
+    hint: "Use a dictionary attack.",
+    correctFlag: "flag{hidden_truth}",
+    artifactUrl: "assets/files/chal1_zip_crack.zip",
+    artifactLabel: "Download DO NOT OPEN",
   },
   {
     id: "whisper-2",

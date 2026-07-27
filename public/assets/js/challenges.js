@@ -151,7 +151,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room1-6") {
+      if (c.id === "room1-7") {
+        note.textContent = "Dictionary-attack the ZIP password on the USB archive.";
+      } else if (c.id === "room1-6") {
         note.textContent = "Download the WAV. The whisper is hidden inside the audio itself.";
       } else if (c.id === "room1-5") {
         note.textContent = "Crack the MD5 clasp, then unlock this ZIP with the recovered word.";
