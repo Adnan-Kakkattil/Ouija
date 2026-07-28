@@ -8,6 +8,9 @@ const {
   challengesForRoom,
   publicChallenge,
   isRoomUnlocked,
+  roomKeyChallengeId,
+  hasRoomKey,
+  findChallenge,
 } = require("../lib/challenges");
 const { requireAuth } = require("./auth");
 
@@ -44,14 +47,23 @@ router.get("/:id", requireAuth, async (req, res, next) => {
     const fresh = await store.publicUser(await store.findUserById(req.user.id));
     const rooms = roomsForUser(fresh.solved || [], fresh.lastChallengeId, fresh.lastRoomId);
     const summary = rooms.find((r) => r.id === room.id);
-    const challenges = challengesForRoom(room.id).map((c) =>
-      publicChallenge(c, fresh.solved || [], fresh.unlockedHints || [])
-    );
+    const keyReady = hasRoomKey(room.id, fresh.solved || []);
+    const keyId = roomKeyChallengeId(room.id);
+    const keyChallenge = keyId
+      ? publicChallenge(findChallenge(keyId), fresh.solved || [], fresh.unlockedHints || [])
+      : null;
+    const challenges = keyReady
+      ? challengesForRoom(room.id).map((c) =>
+          publicChallenge(c, fresh.solved || [], fresh.unlockedHints || [])
+        )
+      : [];
 
     res.json({
       ok: true,
       room: summary,
       challenges,
+      needsRoomKey: !keyReady,
+      keyChallenge,
       user: fresh,
     });
   } catch (err) {

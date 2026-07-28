@@ -35,28 +35,55 @@
   }
 
   async function maybePlayRoomIntro(data) {
-    if (!window.RoomGate || !data.room || !data.user) return false;
-    if (!RoomGate.needsIntro(data.user, data.room.id)) return false;
-    if (!RoomGate.INTROS[data.room.id]) return false;
+    if (!window.RoomGate || !data.room || !data.user) return { played: false };
+    if (!RoomGate.needsIntro(data.user, data.room.id)) return { played: false };
+    if (!RoomGate.INTROS[data.room.id]) return { played: false };
 
     const grid = document.getElementById("roomChallengeGrid");
     if (grid) {
-      grid.innerHTML = '<p class="typewriter-note">The downstairs trail opens…</p>';
+      const waiting =
+        data.room.id === "room-3"
+          ? "The basement door yields…"
+          : data.room.id === "room-2"
+            ? "The downstairs trail opens…"
+            : "The chamber opens…";
+      grid.innerHTML = '<p class="typewriter-note">' + waiting + "</p>";
     }
 
-    await RoomGate.play({ roomId: data.room.id });
+    const result = await RoomGate.play({ roomId: data.room.id });
     try {
       const marked = await Vault.markRoomIntro(data.room.id);
       if (marked.user) currentUser = marked.user;
     } catch (err) {
       console.warn("[room] intro mark failed", err);
     }
+    if (result && result.user) currentUser = result.user;
+    return { played: true, keyAccepted: !!(result && result.keyAccepted) };
+  }
+
+  async function maybeAskRoomKey(data) {
+    if (!window.RoomGate || !data.room || !data.user) return false;
+    const needs =
+      data.needsRoomKey === true || RoomGate.needsKey(currentUser || data.user, data.room.id);
+    if (!needs) return false;
+    if (!RoomGate.INTROS[data.room.id] || !RoomGate.INTROS[data.room.id].requiresKey) {
+      return false;
+    }
+
+    const grid = document.getElementById("roomChallengeGrid");
+    if (grid) {
+      grid.innerHTML =
+        '<p class="typewriter-note">The ritual circle asks for the forgotten word…</p>';
+    }
+
+    const result = await RoomGate.askKey({ roomId: data.room.id });
+    if (result && result.user) currentUser = result.user;
     return true;
   }
 
   async function loadRoom(id) {
     try {
-      const data = await Vault.room(id);
+      let data = await Vault.room(id);
       room = data.room;
       challenges = data.challenges || [];
       if (data.user) {
@@ -70,7 +97,33 @@
           " pts";
       }
 
-      await maybePlayRoomIntro(data);
+      const intro = await maybePlayRoomIntro(data);
+      if (intro.played) {
+        data = await Vault.room(id);
+        room = data.room;
+        challenges = data.challenges || [];
+        if (data.user) currentUser = data.user;
+      }
+
+      /* If intro already seen but key not offered yet, ask key alone */
+      if (!intro.keyAccepted) {
+        const asked = await maybeAskRoomKey(data);
+        if (asked) {
+          data = await Vault.room(id);
+          room = data.room;
+          challenges = data.challenges || [];
+          if (data.user) {
+            currentUser = data.user;
+            document.getElementById("headerChip").textContent =
+              (data.user.teamSigil || "") +
+              " " +
+              data.user.username +
+              " · " +
+              (data.user.score || 0) +
+              " pts";
+          }
+        }
+      }
 
       paintRoom();
       paintChallenges();

@@ -38,7 +38,7 @@ const rooms = [
     id: "room-3",
     number: 3,
     title: "The Basement",
-    lede: "Beneath Blackwood Manor. Heizal went further than Olivia — recover what she tried to erase.",
+    lede: "A freezing threshold beneath the manor — ritual circle, Ouija board, and Olivia's last belongings.",
     pointsPerChallenge: 300,
     challengeIds: ["room3-1"],
   },
@@ -266,6 +266,20 @@ const challenges = [
     artifactLabel: "Open the investigation portal",
   },
   {
+    id: "basement-key",
+    category: "misc",
+    trial: "Room III · The Basement",
+    roman: "III",
+    title: "The Forgotten Word",
+    points: 0,
+    difficulty: "easy",
+    description:
+      "The basement door is open, but the ritual circle still asks for the forgotten word before the chamber will yield its trials.",
+    hint: "Answer is in the basement",
+    correctFlag: "FORGOTTEN",
+    gateForRoom: "room-3",
+  },
+  {
     id: "room3-1",
     roomId: "room-3",
     category: "osint",
@@ -393,6 +407,17 @@ function challengesForRoom(roomId) {
   return room.challengeIds.map((id) => findChallenge(id)).filter(Boolean);
 }
 
+function roomKeyChallengeId(roomId) {
+  if (roomId === "room-3") return "basement-key";
+  return null;
+}
+
+function hasRoomKey(roomId, solvedIds) {
+  const keyId = roomKeyChallengeId(roomId);
+  if (!keyId) return true;
+  return (solvedIds || []).includes(keyId);
+}
+
 function roomComplete(room, solvedSet) {
   if (!room || !room.challengeIds.length) return false;
   return room.challengeIds.every((id) => solvedSet.has(id));
@@ -510,6 +535,14 @@ function nextChallengeAfter(justSolvedId, solvedSet) {
   if (justSolvedId) done.add(justSolvedId);
 
   const current = findChallenge(justSolvedId);
+  if (current && current.gateForRoom) {
+    const gated = findRoom(current.gateForRoom);
+    if (gated) {
+      for (const id of gated.challengeIds) {
+        if (!done.has(id)) return findChallenge(id);
+      }
+    }
+  }
   if (current && current.roomId) {
     const room = findRoom(current.roomId);
     if (room) {
@@ -523,7 +556,7 @@ function nextChallengeAfter(justSolvedId, solvedSet) {
     }
   }
 
-  return challenges.find((c) => !done.has(c.id)) || null;
+  return challenges.find((c) => !done.has(c.id) && c.roomId) || null;
 }
 
 function trialSummary(list) {
@@ -558,6 +591,8 @@ module.exports = {
   challengesForRoom,
   isRoomUnlocked,
   roomComplete,
+  roomKeyChallengeId,
+  hasRoomKey,
   nextChallengeAfter,
   trialSummary,
   hintCost,

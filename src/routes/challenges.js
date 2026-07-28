@@ -2,7 +2,7 @@
 
 const express = require("express");
 const store = require("../lib/store");
-const { challenges, publicChallenge, findChallenge, trialSummary, hintCost } = require("../lib/challenges");
+const { challenges, publicChallenge, findChallenge, trialSummary, hintCost, hasRoomKey } = require("../lib/challenges");
 const { requireAuth, optionalAuth } = require("./auth");
 
 const router = express.Router();
@@ -142,6 +142,14 @@ router.post("/:id/submit", requireAuth, async (req, res, next) => {
 
     const user = await store.findUserById(req.user.id);
     if (!user) return res.status(401).json({ ok: false, message: "Chair gone cold." });
+
+    const pub = await store.publicUser(user);
+    if (c.roomId && !hasRoomKey(c.roomId, pub.solved || [])) {
+      return res.status(403).json({
+        ok: false,
+        message: "Offer the forgotten word before these trials will answer.",
+      });
+    }
 
     if (await store.hasSolve(user.id, c.id)) {
       return res.json({

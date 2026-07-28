@@ -24,6 +24,17 @@
   pointer-events: none;
 }
 
+.gate.is-story-only {
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(90, 70, 40, 0.22), transparent 55%),
+    radial-gradient(ellipse at 30% 80%, rgba(30, 50, 70, 0.18), transparent 50%),
+    linear-gradient(180deg, #0a0908 0%, #12100e 45%, #080706 100%);
+}
+
+.gate.is-story-only .gate__video {
+  display: none;
+}
+
 .gate__video {
   position: absolute;
   inset: 0;
@@ -266,6 +277,14 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(42, 28, 18, 0.55);
+}
+
+.burn-sheet .btn--ghost {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.85rem;
+  color: #2a1c12;
+  border-color: rgba(42, 28, 18, 0.35);
 }
 
 /* ---------------- Room reveal (post-video blank slate) ---------------- */
