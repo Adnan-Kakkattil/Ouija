@@ -579,7 +579,8 @@ const store = {
       .sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  async leaderboard() {
+  async leaderboard(opts) {
+    const includeEmpty = !!(opts && opts.includeEmpty);
     const [teamList, memberStats] = await Promise.all([
       this.listTeams(),
       users()
@@ -596,20 +597,25 @@ const store = {
         .toArray(),
     ]);
     const byTeam = new Map(memberStats.map((r) => [r._id, r]));
-    return teamList
+    let rows = teamList
       .map((t) => {
         const stats = byTeam.get(t.id) || { members: 0, score: 0, solved: 0 };
         return {
           id: t.id,
           name: t.name,
           sigil: t.sigil,
-          members: stats.members,
-          score: stats.score,
-          solved: stats.solved,
+          members: stats.members || 0,
+          score: stats.score || 0,
+          solved: stats.solved || 0,
         };
       })
-      .filter((t) => t.members > 0)
-      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+      .sort((a, b) => b.score - a.score || b.solved - a.solved || a.name.localeCompare(b.name));
+
+    if (!includeEmpty) {
+      rows = rows.filter((t) => t.members > 0);
+    }
+
+    return rows.map((t, i) => Object.assign({ rank: i + 1 }, t));
   },
 
   async stats() {

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle Standings — OUIJA CTF</title>
+<meta name="description" content="Live team leaderboard for OUIJA CTF. Ranks update automatically by circle score.">
+<meta name="theme-color" content="#040306">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English+SC&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/effects.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/board.css">
+<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/leaderboard.css?v=20260728a">
+</head>
+<body class="lb-page">
+<a class="skip-link" href="#main">Skip to standings</a>
+
+<header class="site-header is-stuck">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="index.html" aria-label="OUIJA CTF home">
+      <svg class="brand__sigil" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/>
+        <circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".35"/>
+        <path d="M24 4 L41.3 34 H6.7 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+      </svg>
+      <span>
+        <span class="brand__name">OUIJA</span>
+        <span class="brand__tag">Capture&nbsp;the&nbsp;Flag</span>
+      </span>
+    </a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a class="nav__link" href="dashboard.html">The Table</a>
+      <a class="nav__link" href="challenges.html">Trials</a>
+      <a class="nav__link" href="leaderboard.html" aria-current="page">Standings</a>
+      <span class="nav__actions" data-auth-actions>
+        <a class="btn btn--ghost btn--sm" href="login.html">Enter</a>
+        <a class="btn btn--primary btn--sm" href="signup.html">Join a circle</a>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="lb">
+  <div class="wrap">
+    <header class="lb__hero">
+      <p class="eyebrow">Public · Live</p>
+      <h1 class="lb__title">Circle <span class="gilt">Standings</span></h1>
+      <p class="lead lb__lede">
+        Teams ranked by total points. Scores and ranks update on their own — no refresh needed.
+      </p>
+      <p class="lb__pulse" id="lbPulse" aria-live="polite">
+        <span class="lb__dot" aria-hidden="true"></span>
+        <span id="lbStatus">Listening to the board…</span>
+      </p>
+    </header>
+
+    <div class="lb__stats" aria-label="Board summary">
+      <div class="stat">
+        <span class="stat__label">Circles</span>
+        <strong class="stat__value gilt" id="lbCircles">—</strong>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Leading score</span>
+        <strong class="stat__value gilt" id="lbTopScore">—</strong>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Flags claimed</span>
+        <strong class="stat__value gilt" id="lbFlags">—</strong>
+      </div>
+    </div>
+
+    <section class="lb__board panel" aria-label="Team rankings">
+      <div class="lb__head" aria-hidden="true">
+        <span>Rank</span>
+        <span>Circle</span>
+        <span>Mediums</span>
+        <span>Flags</span>
+        <span>Score</span>
+      </div>
+      <ol class="lb__list" id="lbList"></ol>
+      <p class="lb__empty typewriter-note" id="lbEmpty" hidden>No circles have taken a seat yet.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <p class="site-footer__note">OUIJA CTF · Circle scores rise as mediums claim flags.</p>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="dashboard.html">The Table</a>
+      <a href="challenges.html">Trials</a>
+      <a href="index.html">Home</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/atmosphere.js"></script>
+<script src="assets/js/vault.js?v=20260728z"></script>
+<script src="assets/js/leaderboard.js?v=20260728a"></script>
+</body>
+</html>

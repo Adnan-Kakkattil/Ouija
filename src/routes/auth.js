@@ -111,10 +111,19 @@ router.get("/points", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/leaderboard", async (_req, res, next) => {
+router.get("/leaderboard", async (req, res, next) => {
   try {
-    const [rows, teams] = await Promise.all([store.leaderboard(), store.listTeams()]);
-    res.json({ ok: true, rows, circles: teams.length });
+    const all = String(req.query.all || "") === "1" || String(req.query.all || "") === "true";
+    const [rows, teams] = await Promise.all([
+      store.leaderboard({ includeEmpty: all }),
+      store.listTeams(),
+    ]);
+    res.json({
+      ok: true,
+      rows,
+      circles: teams.length,
+      updatedAt: Date.now(),
+    });
   } catch (err) {
     next(err);
   }

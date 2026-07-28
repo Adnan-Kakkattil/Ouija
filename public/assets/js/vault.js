@@ -145,8 +145,9 @@
       cachedUser = null;
     },
 
-    async leaderboard() {
-      return api("/api/auth/leaderboard");
+    async leaderboard(opts) {
+      const q = opts && opts.all ? "?all=1" : "";
+      return api("/api/auth/leaderboard" + q);
     },
 
     async pointLedger(limit) {
