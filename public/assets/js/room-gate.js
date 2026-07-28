@@ -23,8 +23,8 @@
       finds: [
         { glyph: "📰", text: "A missing newspaper article about the mansion — publication name torn off." },
         { glyph: "📖", text: "Olivia's encrypted investigation journal." },
+        { glyph: "🎙️", text: "A voice recorder with Olivia's damaged audio — something hidden inside the WAV." },
         { glyph: "📷", text: "A damaged camera containing one surviving photograph." },
-        { glyph: "🎙️", text: "A voice recorder with Olivia's final audio recording." },
         { glyph: "💻", text: "An old investigation website stored on Olivia's laptop, containing restricted case files." },
       ],
       closing: [

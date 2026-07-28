@@ -222,9 +222,9 @@
       } else if (c.id === "room2-5") {
         note.textContent = "Open the portal. Public IDs are listed — try neighbouring record numbers.";
       } else if (c.id === "room2-4") {
-        note.textContent = "Download the WAV. Carve or binwalk — a file is appended after the audio.";
+        note.textContent = "Unlock the ZIP with clues from earlier Room 2 challenges.";
       } else if (c.id === "room2-3") {
-        note.textContent = "Unlock the ZIP with clues from Room 2 challenges 1 and 2.";
+        note.textContent = "Download the archive. Recover the audio — hidden data rides inside the WAV.";
       } else if (c.id === "room2-2") {
         note.textContent = "Download the notebook page. A small Caesar shift unlocks her words.";
       } else if (c.id === "room2-1") {
