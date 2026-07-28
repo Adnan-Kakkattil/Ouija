@@ -21,7 +21,7 @@
         "As they carefully examine the room, they discover:",
       ],
       finds: [
-        { glyph: "📰", text: "A torn newspaper article about the mansion's mysterious disappearances." },
+        { glyph: "📰", text: "A missing newspaper article about the mansion — publication name torn off." },
         { glyph: "📖", text: "Olivia's encrypted investigation journal." },
         { glyph: "📷", text: "A damaged camera containing one surviving photograph." },
         { glyph: "🎙️", text: "A voice recorder with Olivia's final audio recording." },

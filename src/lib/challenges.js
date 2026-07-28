@@ -193,11 +193,11 @@ const challenges = [
     category: "osint",
     trial: "Room II · Investigation Room",
     roman: "II",
-    title: "Torn Newspaper",
+    title: "Missing Newspaper",
     points: 200,
     difficulty: "easy",
     description:
-      "Olivia printed an old newspaper article about the mansion, but the publication name is torn off. Identify the newspaper and use what the clipping still reveals to locate the hidden clue in the parish archives.",
+      "Olivia had printed an old newspaper article about the mansion, but the publication name is torn off. Identify the newspaper and use information from it to locate a hidden clue.",
     hint: "The masthead is gone, but the paper still remembers its name. Search the mansion files for that title.",
     correctFlag: "ouija{olivia_investigated}",
     artifactUrl: "assets/files/torn-newspaper.html",
