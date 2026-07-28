@@ -213,7 +213,7 @@ const challenges = [
     points: 200,
     difficulty: "easy",
     description:
-      "A notebook holds one of Olivia's encrypted journal entries. She used a simple cipher to hide what she discovered on her first night — decode it and recover what she wrote.",
+      "A notebook contains one of Olivia's encrypted journal entries. She used a simple Caesar cipher to hide what she discovered on her first night — decode it and recover what she wrote.",
     hint: "A small shift reveals the truth.",
     correctFlag: "flag{she_found_evidence}",
     artifactUrl: "assets/files/olivia-journal.html",
