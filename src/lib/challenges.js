@@ -232,7 +232,7 @@ const challenges = [
       "A password-protected archive holds Olivia's final report. The password is formed by combining clues from the earlier Room 2 challenges — then open the report and follow where she points.",
     hint: "The answer has been with you all along.",
     correctFlag: "ouija{truth_lies_below}",
-    artifactUrl: "assets/files/olivia-final-report.zip",
+    artifactUrl: "assets/files/ctf_student.zip",
     artifactLabel: "Download Olivia's final report",
   },
   {
