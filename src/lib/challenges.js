@@ -284,16 +284,18 @@ const challenges = [
   {
     id: "room3-1",
     roomId: "room-3",
-    category: "osint",
+    category: "crypto",
     trial: "Room III · The Basement",
     roman: "III",
-    title: "Heizal's Repository",
+    title: "Spirit's Journal",
     points: 300,
     difficulty: "medium",
     description:
-      "Heizal documented her findings in a public GitHub repository before entering Blackwood Manor. After discovering something alarming, she removed part of her investigation notes to keep the truth hidden. Recover the deleted information and find the flag.",
-    hint: "GitHub Username: heizal-research",
+      "The investigators recover Olivia's missing ritual paper and place it beside the ancient manuscript. The ritual was never meant to destroy the spirit — it was meant to release it. Among Olivia's scattered things sits an encrypted journal backup. Crack its password, read what she left behind, then finish what she could not: speak the forgotten chant, say the spirit's true name, and guide the planchette to GOODBYE.",
+    hint: "A hash guards the backup. Crack it, then decrypt the OpenSSL-salted journal.",
     correctFlag: "ouija{heizal_investigated}",
+    artifactUrl: "assets/files/Spirits_journal.zip",
+    artifactLabel: "Download the spirit's journal",
   },
   {
     id: "whisper-2",

@@ -62,10 +62,14 @@
           glyph: "📜",
           text: "Olivia's missing ritual paper containing the forgotten chant.",
         },
+        {
+          glyph: "📓",
+          text: "An encrypted spirit journal backup hidden among Olivia's scattered belongings.",
+        },
       ],
       closing: [
-        "The circle is broken — but the house still listens.",
-        "Whatever Olivia found down here is waiting to be finished.",
+        "Gather around the Ouija board. Recite the forgotten chant. Speak the spirit's true name.",
+        "Guide the planchette to GOODBYE — and finish what Olivia could not.",
       ],
     },
   };

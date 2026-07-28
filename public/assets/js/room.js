@@ -271,7 +271,7 @@
     }
     if (note) {
       if (c.id === "room3-1") {
-        note.textContent = "No download — dig through Heizal's public GitHub history for what she deleted.";
+        note.textContent = "Download the journal archive. Crack the hash, decrypt the backup, recover the flag.";
       } else if (c.id === "room2-5") {
         note.textContent = "Open the portal. Public IDs are listed — try neighbouring record numbers.";
       } else if (c.id === "room2-4") {
