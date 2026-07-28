@@ -184,7 +184,7 @@ const challenges = [
       "A ritual paper lies beside the Ouija board, covered in strange symbols. Download the sealed note, peel back each layer of encoding, and recover what the circle tried to hide.",
     hint: "One decoding isn't enough.",
     correctFlag: "flag{forbidden_ritual}",
-    artifactUrl: "assets/files/chal2_cipher.zip",
+    artifactUrl: "assets/files/ritual_paper.txt",
     artifactLabel: "Download the ritual paper",
   },
   {

@@ -145,7 +145,7 @@
     box.hidden = false;
     link.href = c.artifactUrl;
     link.textContent = c.artifactLabel || "Download evidence";
-    if (/\.(zip|wav|png|jpe?g|gif|webp)$/i.test(c.artifactUrl)) {
+    if (/\.(zip|wav|txt|png|jpe?g|gif|webp)$/i.test(c.artifactUrl)) {
       link.setAttribute("download", c.artifactUrl.split("/").pop());
     } else {
       link.removeAttribute("download");
