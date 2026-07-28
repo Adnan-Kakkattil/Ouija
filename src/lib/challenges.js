@@ -32,6 +32,7 @@ const rooms = [
     title: "Olivia's Investigation Room",
     lede: "A forced door downstairs. Red string, clippings, and Olivia's last case — unfinished.",
     pointsPerChallenge: 200,
+    unlockRequiresPrevSolves: 3,
     challengeIds: ["room2-1", "room2-2", "room2-3", "room2-4", "room2-5"],
   },
   {
@@ -40,6 +41,7 @@ const rooms = [
     title: "The Basement",
     lede: "A freezing threshold beneath the manor — ritual circle, Ouija board, and Olivia's last belongings.",
     pointsPerChallenge: 300,
+    unlockRequiresPrevSolves: 3,
     challengeIds: ["room3-1"],
   },
 ];
@@ -418,19 +420,67 @@ function hasRoomKey(roomId, solvedIds) {
   return (solvedIds || []).includes(keyId);
 }
 
+/**
+ * Solved IDs used for room gates. Prefer the team's union so one circle
+ * shares progress toward opening the next chamber.
+ */
+function gateSolvedIds(user) {
+  if (!user) return [];
+  const fromTeam =
+    (user.teamProgress && user.teamProgress.solvedChallengeIds) ||
+    (user.team && user.team.solvedChallengeIds) ||
+    null;
+  if (Array.isArray(fromTeam) && fromTeam.length) {
+    return fromTeam;
+  }
+  return Array.isArray(user.solved) ? user.solved : [];
+}
+
+function countSolvedInRoom(room, solvedIds) {
+  if (!room || !room.challengeIds) return 0;
+  const solved = new Set(solvedIds || []);
+  return room.challengeIds.reduce((n, id) => n + (solved.has(id) ? 1 : 0), 0);
+}
+
 function roomComplete(room, solvedSet) {
   if (!room || !room.challengeIds.length) return false;
   return room.challengeIds.every((id) => solvedSet.has(id));
 }
 
-function isRoomUnlocked(room, solvedIds) {
-  const solved = new Set(solvedIds || []);
+function isRoomUnlocked(room, solvedIds, personalIds) {
   if (!room) return false;
   if (room.sealed && (!room.challengeIds || !room.challengeIds.length)) return false;
-  if (room.number === 1) return solved.has("whisper-1");
+  /* Burned-paper key is per medium — teammates do not skip Trial I. */
+  if (room.number === 1) {
+    const personal = new Set(personalIds != null ? personalIds : solvedIds || []);
+    return personal.has("whisper-1");
+  }
+  const solved = new Set(solvedIds || []);
   const prev = rooms.find((r) => r.number === room.number - 1);
   if (!prev) return false;
+  const need = Number(room.unlockRequiresPrevSolves);
+  if (Number.isFinite(need) && need > 0) {
+    return countSolvedInRoom(prev, solved) >= need;
+  }
   return roomComplete(prev, solved);
+}
+
+function unlockBlockedMessage(room) {
+  if (!room) return "That chamber does not answer.";
+  if (room.number === 1) {
+    return "Offer the burned-paper key before entering the first chamber.";
+  }
+  const need = Number(room.unlockRequiresPrevSolves);
+  if (Number.isFinite(need) && need > 0) {
+    return (
+      "Your circle must claim at least " +
+      need +
+      " flag" +
+      (need === 1 ? "" : "s") +
+      " in the previous chamber before this door will open."
+    );
+  }
+  return "Clear the previous chamber before this door will open.";
 }
 
 function publicChallenge(c, solvedIds, unlockedHintIds) {
@@ -458,12 +508,13 @@ function publicChallenge(c, solvedIds, unlockedHintIds) {
   };
 }
 
-function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
+function publicRoom(room, solvedIds, lastChallengeId, lastRoomId, gateIds) {
   const solved = new Set(solvedIds || []);
+  const gate = gateIds || solvedIds || [];
   const list = challengesForRoom(room.id);
   const solvedCount = list.filter((c) => solved.has(c.id)).length;
   const total = list.length;
-  const unlocked = isRoomUnlocked(room, solvedIds);
+  const unlocked = isRoomUnlocked(room, gate, solvedIds);
   const complete = roomComplete(room, solved);
   const firstUnsolved = list.find((c) => !solved.has(c.id));
   const resume =
@@ -494,6 +545,7 @@ function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
     title: room.title,
     lede: room.lede,
     pointsPerChallenge: room.pointsPerChallenge,
+    unlockRequiresPrevSolves: room.unlockRequiresPrevSolves || null,
     totalChallenges: total,
     solvedChallenges: solvedCount,
     totalPoints: total * room.pointsPerChallenge,
@@ -513,21 +565,19 @@ function publicRoom(room, solvedIds, lastChallengeId, lastRoomId) {
     nextRoomNumber: null,
   };
 
-  if (complete) {
-    const nextRoom = rooms.find((r) => r.number === room.number + 1);
-    if (nextRoom && isRoomUnlocked(nextRoom, solvedIds)) {
-      out.nextRoomId = nextRoom.id;
-      out.nextRoomHref = "room.html#" + nextRoom.id;
-      out.nextRoomTitle = nextRoom.title;
-      out.nextRoomNumber = nextRoom.number;
-    }
+  const nextRoom = rooms.find((r) => r.number === room.number + 1);
+  if (nextRoom && isRoomUnlocked(nextRoom, gate, solvedIds)) {
+    out.nextRoomId = nextRoom.id;
+    out.nextRoomHref = "room.html#" + nextRoom.id;
+    out.nextRoomTitle = nextRoom.title;
+    out.nextRoomNumber = nextRoom.number;
   }
 
   return out;
 }
 
-function roomsForUser(solvedIds, lastChallengeId, lastRoomId) {
-  return rooms.map((r) => publicRoom(r, solvedIds, lastChallengeId, lastRoomId));
+function roomsForUser(solvedIds, lastChallengeId, lastRoomId, gateIds) {
+  return rooms.map((r) => publicRoom(r, solvedIds, lastChallengeId, lastRoomId, gateIds));
 }
 
 function nextChallengeAfter(justSolvedId, solvedSet) {
@@ -550,7 +600,7 @@ function nextChallengeAfter(justSolvedId, solvedSet) {
         if (!done.has(id)) return findChallenge(id);
       }
       const nextRoom = rooms.find((r) => r.number === room.number + 1);
-      if (nextRoom && isRoomUnlocked(nextRoom, [...done]) && nextRoom.challengeIds[0]) {
+      if (nextRoom && isRoomUnlocked(nextRoom, [...done], [...done]) && nextRoom.challengeIds[0]) {
         return findChallenge(nextRoom.challengeIds[0]);
       }
     }
@@ -593,6 +643,9 @@ module.exports = {
   roomComplete,
   roomKeyChallengeId,
   hasRoomKey,
+  gateSolvedIds,
+  countSolvedInRoom,
+  unlockBlockedMessage,
   nextChallengeAfter,
   trialSummary,
   hintCost,
