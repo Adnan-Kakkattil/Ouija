@@ -1,0 +1,20 @@
+# OUIJA CTF — run the app on host port 80
+# Usage: docker compose up -d --build
+# Update:  docker compose up -d --build --force-recreate
+
+services:
+  ouija:
+    build: .
+    image: ouija-ctf:latest
+    container_name: ouija-ctf
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    environment:
+      PORT: "80"
+      HOST: "0.0.0.0"
+      NODE_ENV: production
+      # HTTP on :80 — set COOKIE_SECURE=1 only behind HTTPS
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+    restart: unless-stopped

@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log*
+.git
+.gitignore
+.cursor
+.vscode
+.env
+.env.*
+!.env.example
+atlas-credentials.env
+agent-transcripts
+terminals
+.DS_Store
+Thumbs.db

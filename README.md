@@ -2,7 +2,87 @@
 
 Ghost-themed Capture The Flag with an interactive Ouija board, team signup, and username-or-email login.
 
-Built as an **Express** Node.js app for **Hostinger Node.js Web Apps** (and local `npm start`).
+Built as an **Express** Node.js app for **Docker** (port 80), **Hostinger Node.js Web Apps**, and local `npm start`.
+
+## Docker (port 80)
+
+### 1. Prepare env
+
+```bash
+cp .env.example .env
+# Edit .env — set at least:
+#   MONGODB_URI=mongodb+srv://...
+#   MONGODB_DB=lostweeb01_db
+#   SESSION_SECRET=long-random-string
+#   COOKIE_SECURE=0          # use 1 only behind HTTPS
+#   NODE_ENV=production
+```
+
+Atlas **Network Access** must allow the Docker host IP (or `0.0.0.0/0`).
+
+### 2. Build the image
+
+```bash
+docker build -t ouija-ctf:latest .
+```
+
+### 3. Run on port 80
+
+```bash
+docker run -d \
+  --name ouija-ctf \
+  -p 80:80 \
+  --env-file .env \
+  -e PORT=80 \
+  -e HOST=0.0.0.0 \
+  -e NODE_ENV=production \
+  --restart unless-stopped \
+  ouija-ctf:latest
+```
+
+Open [http://localhost](http://localhost) (or `http://YOUR_SERVER_IP`).  
+Health: [http://localhost/api/health](http://localhost/api/health)
+
+### 4. Update after code changes (rebuild + replace container)
+
+```bash
+# Pull / sync your latest files, then:
+docker build -t ouija-ctf:latest .
+docker stop ouija-ctf
+docker rm ouija-ctf
+docker run -d \
+  --name ouija-ctf \
+  -p 80:80 \
+  --env-file .env \
+  -e PORT=80 \
+  -e HOST=0.0.0.0 \
+  -e NODE_ENV=production \
+  --restart unless-stopped \
+  ouija-ctf:latest
+```
+
+**One-liner with Compose** (same rebuild behaviour):
+
+```bash
+docker compose up -d --build --force-recreate
+```
+
+### Useful Docker commands
+
+| Command | Purpose |
+|---------|---------|
+| `docker compose up -d --build` | Build + start |
+| `docker compose up -d --build --force-recreate` | Rebuild image and recreate container after changes |
+| `docker compose logs -f` | Follow logs |
+| `docker compose down` | Stop and remove container |
+| `docker ps` | Confirm `ouija-ctf` is up on `0.0.0.0:80` |
+| `curl http://127.0.0.1/api/health` | Quick health check |
+
+### Notes
+
+- The container listens on **port 80 inside**; `-p 80:80` maps it to the host.
+- Secrets stay in `.env` (gitignored) — they are **not** baked into the image.
+- On plain HTTP, keep `COOKIE_SECURE=0` or logins will not stick. Behind TLS termination, set `COOKIE_SECURE=1`.
 
 ## Hostinger Business (Node Web App)
 
@@ -77,15 +157,17 @@ The app loads `atlas-credentials.env` then `.env` (`.env` wins on conflicts).
 ## Project layout
 
 ```
-app.js                 # Hostinger entry point (listens on process.env.PORT)
+Dockerfile             # Production image (Node 20, port 80)
+docker-compose.yml     # Build + run helper on host :80
+app.js                 # Entry point (listens on process.env.PORT)
 package.json           # start script + engines
 public/                # static UI (HTML/CSS/JS, Ouija board, effects)
 src/lib/db.js          # MongoDB connection
 src/lib/store.js       # users, teams, solves, logins
 src/lib/challenges.js  # challenge catalogue
-src/routes/            # /api/auth, /api/challenges
+src/routes/            # /api/auth, /api/challenges, /api/rooms, …
 atlas-credentials.env  # Atlas URI (gitignored)
-.env                   # local secrets (gitignored)
+.env                   # local / Docker secrets (gitignored)
 ```
 
 ## MongoDB collections
@@ -164,8 +246,9 @@ That toast means the browser loaded `dashboard.html` but **`/api/*` did not answ
 
 | Script | Purpose |
 |--------|---------|
-| `npm start` | Production / Hostinger start |
+| `npm start` | Production / Hostinger / Docker `CMD` |
 | `npm run dev` | Local start with `--watch` (Node 18+) |
+| `docker compose up -d --build` | Build image and run on port 80 |
 
 ## License
 
