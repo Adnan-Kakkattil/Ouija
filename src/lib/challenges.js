@@ -168,7 +168,7 @@ const challenges = [
       "An old USB drive was taped under the desk. Inside sits a locked archive labelled DO NOT OPEN. Crack the ZIP password and recover what someone tried to bury.",
     hint: "Use a dictionary attack.",
     correctFlag: "flag{hidden_truth}",
-    artifactUrl: "assets/files/chal1_zip_crack.zip",
+    artifactUrl: "assets/files/locked_archive.zip",
     artifactLabel: "Download DO NOT OPEN",
   },
   {
