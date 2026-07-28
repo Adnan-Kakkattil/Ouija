@@ -41,7 +41,7 @@ const rooms = [
     title: "The Basement",
     lede: "A freezing threshold beneath the manor — ritual circle, Ouija board, and Olivia's last belongings.",
     pointsPerChallenge: 300,
-    unlockRequiresPrevSolves: 3,
+    alwaysOpen: true,
     challengeIds: ["room3-1"],
   },
 ];
@@ -412,7 +412,7 @@ function challengesForRoom(roomId) {
 }
 
 function roomKeyChallengeId(roomId) {
-  if (roomId === "room-3") return "basement-key";
+  /* Room 3 key gate disabled — chamber stays permanently open. */
   return null;
 }
 
@@ -452,6 +452,7 @@ function roomComplete(room, solvedSet) {
 function isRoomUnlocked(room, solvedIds, personalIds) {
   if (!room) return false;
   if (room.sealed && (!room.challengeIds || !room.challengeIds.length)) return false;
+  if (room.alwaysOpen) return true;
   /* Burned-paper key is per medium — teammates do not skip Trial I. */
   if (room.number === 1) {
     const personal = new Set(personalIds != null ? personalIds : solvedIds || []);

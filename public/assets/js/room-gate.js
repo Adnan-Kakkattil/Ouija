@@ -40,16 +40,9 @@
       title: "The Basement",
       veilLede: "The key from Olivia's room turns in the lock. Cold air waits below.",
       veilCta: "Open the basement door",
-      cta: "Continue to the circle",
+      cta: "Enter Room 3 Challenges",
       next: "room.html#room-3",
-      requiresKey: true,
-      keyChallengeId: "basement-key",
-      keyTitle: "What is the key?",
-      keyLede:
-        "The ritual circle will not yield its trials until the forgotten word is spoken.",
-      keyPlaceholder: "············",
-      keySubmit: "Offer the key",
-      keyHintPrompt: "Ask for a hint (−10 pts)",
+      requiresKey: false,
       prose: [
         "Using the key recovered from Olivia's investigation room, the investigators unlock the heavy basement door. As it slowly opens, a freezing gust of air rushes past them. The silence is overwhelming.",
         "The basement has remained untouched for decades.",

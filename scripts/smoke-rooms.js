@@ -65,7 +65,7 @@ function assert(cond, msg) {
   assert(rooms.length === 3, "3 rooms");
   assert(rooms[0].status === "locked", "room1 locked before key");
   assert(rooms[1].unlocked === false, "room2 locked before room1 progress");
-  assert(rooms[2].unlocked === false, "room3 locked before room2 progress");
+  assert(rooms[2].unlocked === true, "room3 permanently open");
 
   await req("POST", "/api/challenges/whisper-1/submit", { flag: "intothevictorianmansion" }, ck);
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
@@ -113,21 +113,13 @@ function assert(cond, msg) {
   await req("POST", "/api/challenges/room2-1/submit", { flag: "ouija{olivia_investigated}" }, ck);
   await req("POST", "/api/challenges/room2-2/submit", { flag: "flag{she_found_evidence}" }, ck);
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
-  assert(rooms[2].unlocked === false, "room3 locked after only 2 room2 flags");
-
-  await req("POST", "/api/challenges/room2-3/submit", { flag: "flag{footsteps_at_midnight}" }, ck);
-  rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
-  assert(rooms[2].unlocked === true, "room3 unlocked after 3 room2 flags");
+  assert(rooms[2].unlocked === true, "room3 stays open regardless of room2 progress");
 
   const r3 = await req("GET", "/api/rooms/room-3", null, ck);
   assert(r3.status === 200, "room3 open");
   const r3body = JSON.parse(r3.body);
-  assert(r3body.needsRoomKey === true || (r3body.challenges && r3body.challenges.length === 0), "room3 waits for basement key");
-
-  await req("POST", "/api/challenges/basement-key/submit", { flag: "FORGOTTEN" }, ck);
-  const r3b = JSON.parse((await req("GET", "/api/rooms/room-3", null, ck)).body);
-  assert(r3b.needsRoomKey === false, "basement key accepted");
-  assert(r3b.challenges.length === 1, "room3 lists challenges after key");
+  assert(r3body.needsRoomKey === false, "room3 has no key gate");
+  assert(r3body.challenges.length >= 1, "room3 lists challenges");
 
   console.log("SMOKE PASS");
 })().catch((e) => {
