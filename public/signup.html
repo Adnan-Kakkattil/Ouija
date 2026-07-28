@@ -79,7 +79,7 @@
       <header class="auth__head">
         <p class="eyebrow">Enrolment</p>
         <h1>Join the circle</h1>
-        <p>Pick a username and a password. That is all the board needs.</p>
+        <p>Pick a username, a password, and your team so the board can track circle scores.</p>
       </header>
 
       <div class="alert alert--error" id="formError" role="alert" hidden>
@@ -131,6 +131,28 @@
           <p class="field__error" id="passwordError" role="alert"></p>
         </div>
 
+        <div class="field" data-field="teamId">
+          <label class="field__label" for="teamId">
+            <span>Team</span>
+          </label>
+          <div class="field__shell">
+            <svg class="field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <circle cx="9" cy="8" r="3"/><circle cx="16" cy="9.5" r="2.4"/>
+              <path d="M3.8 19c1-3.2 3.2-4.8 5.2-4.8 1.3 0 2.4.5 3.4 1.4 1.1-.8 2.4-1.3 3.9-1.3 2.1 0 3.9 1.4 4.9 4.7"/>
+            </svg>
+            <select class="field__select" id="teamId" name="teamId" required
+                    aria-describedby="teamIdError">
+              <option value="" disabled selected>Select your team…</option>
+              <option value="team_1">Team 1</option>
+              <option value="team_2">Team 2</option>
+              <option value="team_3">Team 3</option>
+              <option value="team_4">Team 4</option>
+            </select>
+          </div>
+          <p class="field__hint">Your score counts toward this team's standing.</p>
+          <p class="field__error" id="teamIdError" role="alert"></p>
+        </div>
+
         <div class="field" data-field="agree">
           <label class="check">
             <input type="checkbox" id="agree" name="agree" required>
@@ -170,12 +192,12 @@
   </div>
 </div>
 
-<script src="assets/js/vault.js?v=20260728b"></script>
-<script src="assets/js/atmosphere.js?v=20260728b"></script>
-<script src="assets/js/board.js?v=20260728b"></script>
-<script src="assets/js/auth.js?v=20260728b"></script>
+<script src="assets/js/vault.js?v=20260728v"></script>
+<script src="assets/js/atmosphere.js?v=20260728v"></script>
+<script src="assets/js/board.js?v=20260728v"></script>
+<script src="assets/js/auth.js?v=20260728v"></script>
 <script src="assets/js/first-rite.js?v=20260728c"></script>
 <script src="assets/js/first-gate.js?v=20260728c"></script>
-<script src="assets/js/signup.js?v=20260728c"></script>
+<script src="assets/js/signup.js?v=20260728v"></script>
 </body>
 </html>

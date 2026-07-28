@@ -139,13 +139,17 @@ router.post("/signup", async (req, res) => {
     if (password.length > 512) return fail(res, 400, "password", "That password is too long.");
     if (!agree) return fail(res, 400, "agree", "You must accept the terms & conditions.");
 
+    const team = await store.resolveRegistrationTeam(req.body.teamId);
+    if (!team) {
+      return fail(res, 400, "teamId", "Choose your team from the list.");
+    }
+
     const nameKey = username.toLowerCase();
     if (await store.findUserByLogin(username)) {
       return fail(res, 409, "username", "Another medium already answers to that name.");
     }
 
-    /* Auto-seat in a default circle — registration no longer asks for team/email */
-    const teamId = await store.defaultTeamId();
+    const teamId = team.id;
     const email = nameKey + "@local.ouija";
     const mailKey = email;
 

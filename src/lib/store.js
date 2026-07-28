@@ -3,16 +3,14 @@
 const { randomUUID } = require("crypto");
 const { getDb } = require("./db");
 
-const SEED_CIRCLES = [
-  { name: "The Hollow Choir", sigil: "☾" },
-  { name: "Candlewick Circle", sigil: "🕯" },
-  { name: "Order of the Pale Lantern", sigil: "✦" },
-  { name: "Sisters of the Thin Veil", sigil: "◈" },
-  { name: "The Ninth Knock", sigil: "❾" },
-  { name: "Mourners of Blackmoor", sigil: "†" },
-  { name: "The Ashen Seance", sigil: "☗" },
-  { name: "Keepers of the Broken Planchette", sigil: "⚵" },
+const REGISTRATION_TEAMS = [
+  { id: "team_1", name: "Team 1", sigil: "Ⅰ" },
+  { id: "team_2", name: "Team 2", sigil: "Ⅱ" },
+  { id: "team_3", name: "Team 3", sigil: "Ⅲ" },
+  { id: "team_4", name: "Team 4", sigil: "Ⅳ" },
 ];
+
+const REGISTRATION_TEAM_IDS = REGISTRATION_TEAMS.map((t) => t.id);
 
 const SIGILS = ["☾", "✦", "◈", "†", "☗", "⚵", "✧", "⁂", "☥", "⚕", "❈", "⌘"];
 
@@ -37,29 +35,56 @@ function points() {
 
 const store = {
   async seedTeams() {
-    const count = await teams().countDocuments();
-    if (count > 0) return;
-    const seeded = SEED_CIRCLES.map((c) => ({
-      id: "circle_" + randomUUID().replace(/-/g, "").slice(0, 12),
-      name: c.name,
-      nameKey: c.name.trim().toLowerCase(),
-      sigil: c.sigil,
-      createdAt: Date.now(),
-      founderId: null,
-      seeded: true,
-    }));
-    await teams().insertMany(seeded);
+    for (const t of REGISTRATION_TEAMS) {
+      const nameKey = t.name.toLowerCase();
+      const clash = await teams().findOne({ nameKey, id: { $ne: t.id } });
+      if (clash) {
+        await teams().updateOne(
+          { id: clash.id },
+          {
+            $set: {
+              name: String(clash.name || "Circle") + " (legacy)",
+              nameKey: nameKey + "_legacy_" + String(clash.id).slice(-6),
+            },
+          }
+        );
+      }
+      await teams().updateOne(
+        { id: t.id },
+        {
+          $set: {
+            name: t.name,
+            nameKey,
+            sigil: t.sigil,
+            seeded: true,
+            registration: true,
+          },
+          $setOnInsert: {
+            id: t.id,
+            createdAt: Date.now(),
+            founderId: null,
+          },
+        },
+        { upsert: true }
+      );
+    }
   },
 
-  /* Registration no longer asks for a circle — seat everyone in the first seeded team */
+  isRegistrationTeamId(teamId) {
+    return REGISTRATION_TEAM_IDS.includes(String(teamId || ""));
+  },
+
+  async resolveRegistrationTeam(teamId) {
+    await this.seedTeams();
+    const id = String(teamId || "").trim();
+    if (!this.isRegistrationTeamId(id)) return null;
+    return this.findTeam(id);
+  },
+
+  /* Fallback only — signup should always send an explicit teamId */
   async defaultTeamId() {
     await this.seedTeams();
-    const team = await teams().find({ seeded: true }, { projection: { _id: 0, id: 1 } }).sort({ name: 1 }).limit(1).next();
-    if (team) return team.id;
-    const any = await teams().find({}, { projection: { _id: 0, id: 1 } }).limit(1).next();
-    if (any) return any.id;
-    const made = await this.createTeam("Wanderers of the Board");
-    return made.id;
+    return REGISTRATION_TEAM_IDS[0];
   },
 
   async markStorySeen(userId) {
@@ -111,7 +136,10 @@ const store = {
 
   async listTeams() {
     await this.seedTeams();
-    return teams().find({}, { projection: { _id: 0 } }).sort({ name: 1 }).toArray();
+    return teams()
+      .find({ id: { $in: REGISTRATION_TEAM_IDS } }, { projection: { _id: 0 } })
+      .sort({ name: 1 })
+      .toArray();
   },
 
   async findTeam(id) {

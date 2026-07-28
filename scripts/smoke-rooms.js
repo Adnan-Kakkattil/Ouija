@@ -54,6 +54,7 @@ function assert(cond, msg) {
   const signup = await req("POST", "/api/auth/signup", {
     username: "rooms_" + stamp,
     password: "x",
+    teamId: "team_1",
     agree: true,
   });
   assert(signup.status === 201, "signup");

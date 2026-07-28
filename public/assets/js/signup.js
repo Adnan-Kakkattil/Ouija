@@ -1,5 +1,5 @@
 /* =========================================================
-   OUIJA CTF — Enrolment (username + password + terms)
+   OUIJA CTF — Enrolment (username + password + team + terms)
    ========================================================= */
 
 (function () {
@@ -11,6 +11,7 @@
   const els = {
     username: document.getElementById("username"),
     password: document.getElementById("password"),
+    teamId: document.getElementById("teamId"),
     agree: document.getElementById("agree"),
     submit: document.getElementById("submit"),
   };
@@ -28,11 +29,60 @@
       if (!els.password.value) return "Choose a password.";
       return "";
     },
+    teamId() {
+      if (!els.teamId || !els.teamId.value) return "Choose your team.";
+      return "";
+    },
     agree() {
       if (!els.agree.checked) return "You must accept the terms & conditions.";
       return "";
     },
   };
+
+  async function paintTeams() {
+    if (!els.teamId) return;
+    try {
+      const teams = await Vault.listTeams();
+      if (!teams.length) return;
+      const current = els.teamId.value;
+      els.teamId.innerHTML =
+        '<option value="" disabled ' +
+        (current ? "" : "selected") +
+        ">Select your team…</option>" +
+        teams
+          .map(function (t) {
+            const selected = current && current === t.id ? " selected" : "";
+            const count =
+              typeof t.memberCount === "number" ? " · " + t.memberCount + " seated" : "";
+            return (
+              '<option value="' +
+              escapeAttr(t.id) +
+              '"' +
+              selected +
+              ">" +
+              escapeHtml(t.sigil ? t.sigil + " " : "") +
+              escapeHtml(t.name) +
+              escapeHtml(count) +
+              "</option>"
+            );
+          })
+          .join("");
+    } catch (err) {
+      console.warn("[signup] teams", err);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  function escapeAttr(s) {
+    return String(s).replace(/[&"<>]/g, function (c) {
+      return ({ "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" })[c];
+    });
+  }
 
   async function paintTally() {
     try {
@@ -48,7 +98,7 @@
 
   async function onSubmit(e) {
     e.preventDefault();
-    AuthUI.clearAll(["username", "password", "agree"]);
+    AuthUI.clearAll(["username", "password", "teamId", "agree"]);
     if (!AuthUI.validate(rules)) return;
 
     AuthUI.busy(els.submit, true);
@@ -56,6 +106,7 @@
       const user = await Vault.signup({
         username: els.username.value.trim(),
         password: els.password.value,
+        teamId: els.teamId.value,
         agree: true,
       });
       await welcome(user);
@@ -81,7 +132,10 @@
 
     const displayName = (user && user.username) || "medium";
     if (title) title.textContent = displayName;
-    if (note) note.textContent = "The board is spelling your welcome…";
+    if (note) {
+      const teamLabel = user && user.teamName ? " · " + user.teamName : "";
+      note.textContent = "Seated" + teamLabel + ". The board is spelling your welcome…";
+    }
 
     const finish = async () => {
       if (screen) {
@@ -132,7 +186,7 @@
 
   async function boot() {
     if (await Vault.redirectIfAuthed("dashboard.html")) return;
-    await paintTally();
+    await Promise.all([paintTally(), paintTeams()]);
     AuthUI.wireLiveValidation(rules);
     form.addEventListener("submit", onSubmit);
     els.username.focus();

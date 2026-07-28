@@ -52,6 +52,7 @@ function pickCookie(setCookieHeaders) {
   const signup = await req("POST", "/api/auth/signup", {
     username,
     password,
+    teamId: "team_2",
     agree: true,
   });
   console.log(
@@ -103,16 +104,22 @@ function pickCookie(setCookieHeaders) {
       const hasEmail = /id=["']email["']/.test(html);
       const hasWelcome = /id=["']welcome["']/.test(html);
       const hasWelcomeTitle = /id=["']welcomeTitle["']/.test(html);
+      const hasTeam = /id=["']teamId["']/.test(html);
       console.log(
         "page",
         p,
         r.status,
         "emailField=" + hasEmail,
+        "teamField=" + hasTeam,
         "welcome=" + hasWelcome,
         "welcomeTitle=" + hasWelcomeTitle
       );
       if (hasEmail) {
         console.error("FAIL: signup.html should not ask for email");
+        process.exit(1);
+      }
+      if (!hasTeam) {
+        console.error("FAIL: signup.html must include team dropdown");
         process.exit(1);
       }
       if (!hasWelcome || !hasWelcomeTitle) {
