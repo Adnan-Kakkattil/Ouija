@@ -64,7 +64,7 @@ function assert(cond, msg) {
   assert(rooms.length === 3, "3 rooms");
   assert(rooms[0].status === "locked", "room1 locked before key");
   assert(rooms[1].status === "sealed" || rooms[1].status === "locked", "room2 locked");
-  assert(rooms[2].status === "sealed" || rooms[2].status === "locked", "room3 locked");
+  assert(rooms[2].status === "locked", "room3 locked before room2 clear");
 
   await req("POST", "/api/challenges/whisper-1/submit", { flag: "intothevictorianmansion" }, ck);
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
@@ -120,6 +120,20 @@ function assert(cond, msg) {
   rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
   assert(rooms[1].solvedChallenges === 5, "room2 has five solves");
   assert(rooms[1].complete === true, "room2 cleared");
+  assert(rooms[1].nextRoomId === "room-3", "room2 points to room3");
+  assert(rooms[2].unlocked === true, "room3 unlocked after room2");
+  assert(rooms[2].totalChallenges === 1, "room3 has 1 challenge");
+
+  const r3 = await req("GET", "/api/rooms/room-3", null, ck);
+  assert(r3.status === 200, "room3 open");
+  assert(JSON.parse(r3.body).challenges.length === 1, "room3 lists 1");
+  assert(JSON.parse(r3.body).challenges[0].id === "room3-1", "room3-1 present");
+  assert(JSON.parse(r3.body).challenges[0].points === 300, "room3 300 pts");
+
+  await req("POST", "/api/challenges/room3-1/submit", { flag: "ouija{heizal_investigated}" }, ck);
+  rooms = JSON.parse((await req("GET", "/api/rooms", null, ck)).body).rooms;
+  assert(rooms[2].solvedChallenges === 1, "room3 has one solve");
+  assert(rooms[2].complete === true, "room3 cleared");
 
   const idorList = await req("GET", "/api/investigation/reports");
   assert(idorList.status === 200, "investigation list");

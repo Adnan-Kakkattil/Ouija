@@ -37,11 +37,10 @@ const rooms = [
   {
     id: "room-3",
     number: 3,
-    title: "The Third Chamber",
-    lede: "The basement she feared. Not yet opened.",
+    title: "The Basement",
+    lede: "Beneath Blackwood Manor. Heizal went further than Olivia — recover what she tried to erase.",
     pointsPerChallenge: 300,
-    challengeIds: [],
-    sealed: true,
+    challengeIds: ["room3-1"],
   },
 ];
 
@@ -267,6 +266,20 @@ const challenges = [
     correctFlag: "flag{murder_not_accident}",
     artifactUrl: "assets/files/olivia-portal/index.html",
     artifactLabel: "Open the investigation portal",
+  },
+  {
+    id: "room3-1",
+    roomId: "room-3",
+    category: "osint",
+    trial: "Room III · The Basement",
+    roman: "III",
+    title: "Heizal's Repository",
+    points: 300,
+    difficulty: "medium",
+    description:
+      "Heizal documented her findings in a public GitHub repository before entering Blackwood Manor. After discovering something alarming, she removed part of her investigation notes to keep the truth hidden. Recover the deleted information and find the flag.",
+    hint: "GitHub Username: heizal-research",
+    correctFlag: "ouija{heizal_investigated}",
   },
   {
     id: "whisper-2",

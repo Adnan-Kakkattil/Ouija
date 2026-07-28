@@ -151,7 +151,9 @@
       link.removeAttribute("download");
     }
     if (note) {
-      if (c.id === "room2-5") {
+      if (c.id === "room3-1") {
+        note.textContent = "No download — dig through Heizal's public GitHub history for what she deleted.";
+      } else if (c.id === "room2-5") {
         note.textContent = "Open the portal. Public IDs are listed — try neighbouring record numbers.";
       } else if (c.id === "room2-4") {
         note.textContent = "Download the WAV. Carve or binwalk — a file is appended after the audio.";
