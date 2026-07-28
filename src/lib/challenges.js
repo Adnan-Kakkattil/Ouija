@@ -245,11 +245,9 @@ const challenges = [
     points: 200,
     difficulty: "hard",
     description:
-      "A password-protected archive holds Olivia's final report. The password is formed by combining clues from earlier Room 2 challenges. Unpack it, run her investigation terminal, and recover what she concluded — the truth lies beneath the house. After you submit the flag in the lab, click the Reset Lab button.",
-    hint: "The answer has been with you all along.",
+      "Olivia's final investigation report is locked behind a live archive terminal. Combine clues from earlier Room 2 challenges to get in, recover what she concluded — the truth lies beneath the house — and after you submit the flag in the lab, click the Reset Lab button.",
+    hint: "http://20.121.118.63:3000 — The answer has been with you all along.",
     correctFlag: "ouija{truth_lies_below}",
-    artifactUrl: "assets/files/ctf_student.zip",
-    artifactLabel: "Download Olivia's final report",
   },
   {
     id: "room2-5",
