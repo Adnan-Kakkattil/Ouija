@@ -8,6 +8,11 @@ const REGISTRATION_TEAMS = [
   { id: "team_2", name: "Team 2", sigil: "Ⅱ" },
   { id: "team_3", name: "Team 3", sigil: "Ⅲ" },
   { id: "team_4", name: "Team 4", sigil: "Ⅳ" },
+  { id: "team_5", name: "Team 5", sigil: "Ⅴ" },
+  { id: "team_6", name: "Team 6", sigil: "Ⅵ" },
+  { id: "team_7", name: "Team 7", sigil: "Ⅶ" },
+  { id: "team_8", name: "Team 8", sigil: "Ⅷ" },
+  { id: "team_9", name: "Team 9", sigil: "Ⅸ" },
 ];
 
 const REGISTRATION_TEAM_IDS = REGISTRATION_TEAMS.map((t) => t.id);
